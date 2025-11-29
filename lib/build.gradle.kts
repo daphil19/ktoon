@@ -33,7 +33,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
-            artifactId = "simplefin-kotlin"
+            artifactId = "ktoon"
         }
     }
 }
