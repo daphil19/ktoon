@@ -63,14 +63,18 @@ internal class ToonEncoder(
         when (descriptor.kind) {
             StructureKind.CLASS,
             StructureKind.OBJECT,
-            StructureKind.MAP ->
+            StructureKind.MAP -> {
+                val siblingKeys =
+                    (0 until descriptor.elementsCount).map { descriptor.getElementName(it) }.toSet()
                 ToonObjectEncoder(
                     writer = writer,
                     config = config,
                     serializersModule = serializersModule,
                     indentLevel = 0,
                     isRoot = true,
+                    siblingKeys = siblingKeys,
                 )
+            }
             StructureKind.LIST ->
                 ToonArrayEncoder(
                     writer = writer,

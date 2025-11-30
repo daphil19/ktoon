@@ -1,5 +1,6 @@
 package com.lukelast.ktoon.encoding
 
+import com.lukelast.ktoon.KeyFoldingMode
 import com.lukelast.ktoon.ToonConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationStrategy
@@ -17,18 +18,24 @@ internal class ToonObjectEncoder(
     override val serializersModule: SerializersModule,
     private val indentLevel: Int,
     private val isRoot: Boolean = false,
+    private val pendingKeys: List<String> = emptyList(),
+    private val siblingKeys: Set<String> = emptySet(),
 ) : AbstractEncoder() {
 
     private var elementIndex = 0
     private var currentKey: String? = null
+    private var hasWrittenElement = false
 
     override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int) = false
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
         elementIndex = index
         currentKey = descriptor.getElementName(index)
-        if (!isRoot || elementIndex > 0) writer.writeNewline()
-        writer.writeIndent(indentLevel)
+        hasWrittenElement = true
+        if (!isRoot || elementIndex > 0) {
+            if (pendingKeys.isEmpty()) writer.writeNewline()
+        }
+        if (pendingKeys.isEmpty()) writer.writeIndent(indentLevel)
         return true
     }
 
@@ -55,34 +62,106 @@ internal class ToonObjectEncoder(
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) =
         writeKeyAndValue(quoteValue(enumDescriptor.getElementName(index)))
 
+    private fun checkCollision(foldedKey: String): Boolean =
+        siblingKeys.contains(foldedKey) || siblingKeys.any { it.startsWith("$foldedKey.") }
+
+    private fun canFoldKey(descriptor: SerialDescriptor, key: String): Boolean =
+        canFoldKey(key) && descriptor.elementsCount == 1 && descriptor.kind != StructureKind.LIST
+
+    private fun canFoldKey(key: String): Boolean =
+        config.keyFolding == KeyFoldingMode.SAFE &&
+            isValidIdentifier(key) &&
+            pendingKeys.size + 1 <= (config.flattenDepth ?: Int.MAX_VALUE)
+
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
-        val key = currentKey ?: "value"
-        return when (descriptor.kind) {
-            StructureKind.CLASS,
-            StructureKind.OBJECT,
-            StructureKind.MAP -> {
-                writeKey(key)
-                ToonObjectEncoder(
-                    writer = writer,
-                    config = config,
-                    serializersModule = serializersModule,
-                    indentLevel = indentLevel + 1,
-                    isRoot = false,
-                )
-            }
-            StructureKind.LIST ->
+        val key = currentKey ?: error("Current key is null for structure start")
+
+        // Calculate potential folded key to check for collisions
+        val nextPendingKeys = pendingKeys + key
+        val foldedKey = nextPendingKeys.joinToString(".")
+
+        // Collision check: if the folded key exists as a sibling, we cannot fold
+        val collision = pendingKeys.isNotEmpty() && checkCollision(foldedKey)
+
+        return if (canFoldKey(descriptor, key) && !collision) {
+            // Continue folding
+            ToonObjectEncoder(
+                writer = writer,
+                config = config,
+                serializersModule = serializersModule,
+                indentLevel = indentLevel, // Indent doesn't increase while folding
+                isRoot = isRoot, // Preserve root status while folding
+                pendingKeys = nextPendingKeys,
+                siblingKeys = siblingKeys,
+            )
+        } else {
+            // Cannot fold or decided not to
+
+            // Special case: folding into array header
+            // If the next element is a list, and we have pending keys, and the list key is
+            // foldable,
+            // we can merge the pending keys with the list key and let ToonArrayEncoder handle it.
+            if (
+                descriptor.kind == StructureKind.LIST &&
+                    isValidIdentifier(key) &&
+                    !collision &&
+                    pendingKeys.isNotEmpty()
+            ) {
+                if (!isRoot || elementIndex > 0) writer.writeNewline()
+                writer.writeIndent(indentLevel)
+
+                val fullKey = (pendingKeys + key).joinToString(".")
                 ToonArrayEncoder(
                     writer = writer,
                     config = config,
                     serializersModule = serializersModule,
                     indentLevel = indentLevel,
-                    key = key,
+                    key = fullKey,
                 )
-            else -> this
+            } else {
+                val newIndent = flushPendingKeys()
+
+                // For the new encoder, we need the keys of the new object to check for collisions
+                // in *its* children
+                val newSiblingKeys =
+                    (0 until descriptor.elementsCount).map { descriptor.getElementName(it) }.toSet()
+
+                if (pendingKeys.isNotEmpty()) writer.writeIndent(newIndent)
+
+                when (descriptor.kind) {
+                    StructureKind.CLASS,
+                    StructureKind.OBJECT,
+                    StructureKind.MAP -> {
+                        writeKey(key)
+                        ToonObjectEncoder(
+                            writer = writer,
+                            config = config,
+                            serializersModule = serializersModule,
+                            indentLevel = newIndent + 1,
+                            isRoot = false,
+                            pendingKeys = emptyList(),
+                            siblingKeys = newSiblingKeys,
+                        )
+                    }
+                    StructureKind.LIST ->
+                        ToonArrayEncoder(
+                            writer = writer,
+                            config = config,
+                            serializersModule = serializersModule,
+                            indentLevel = newIndent,
+                            key = key,
+                        )
+                    else -> this
+                }
+            }
         }
     }
 
-    override fun endStructure(descriptor: SerialDescriptor) {}
+    override fun endStructure(descriptor: SerialDescriptor) {
+        if (pendingKeys.isNotEmpty() && !hasWrittenElement) {
+            flushPendingKeys(writeNewline = false)
+        }
+    }
 
     private fun quoteValue(value: String) =
         StringQuoting.quote(value, StringQuoting.QuotingContext.OBJECT_VALUE, config.delimiter.char)
@@ -90,11 +169,50 @@ internal class ToonObjectEncoder(
     private fun quoteKey(key: String) =
         StringQuoting.quote(key, StringQuoting.QuotingContext.OBJECT_KEY, config.delimiter.char)
 
+    private fun writeKey(key: String) = writer.writeKey(quoteKey(key))
+
     private fun writeKeyAndValue(value: String) {
-        currentKey?.let { writer.writeKeyValue(quoteKey(it), value) }
+        val key = currentKey
+        if (key != null) {
+            val nextPendingKeys = pendingKeys + key
+            val foldedKey = nextPendingKeys.joinToString(".")
+
+            if (canFoldKey(key) && !checkCollision(foldedKey)) {
+                // Folded primitive
+                if (!isRoot || elementIndex > 0) writer.writeNewline()
+                writer.writeIndent(indentLevel)
+                writer.writeKeyValue(quoteKey(foldedKey), value)
+            } else {
+                // Cannot fold, flush pending
+                val newIndent = flushPendingKeys()
+
+                if (pendingKeys.isNotEmpty()) {
+                    // We just flushed, so we are on a new line.
+                    writer.writeIndent(newIndent)
+                }
+
+                writer.writeKeyValue(quoteKey(key), value)
+            }
+        }
     }
 
-    private fun writeKey(key: String) = writer.writeKey(quoteKey(key))
+    private fun flushPendingKeys(writeNewline: Boolean = true): Int {
+        if (pendingKeys.isEmpty()) return indentLevel
+
+        if (!isRoot || elementIndex > 0) writer.writeNewline()
+        writer.writeIndent(indentLevel)
+
+        val combinedKey = pendingKeys.joinToString(".")
+        writer.writeKey(quoteKey(combinedKey))
+
+        if (writeNewline) writer.writeNewline()
+
+        return indentLevel + 1
+    }
+
+    private fun isValidIdentifier(key: String): Boolean {
+        return key.matches(Regex("^[A-Za-z_][A-Za-z0-9_]*$"))
+    }
 
     override fun <T : Any> encodeNullableSerializableElement(
         descriptor: SerialDescriptor,
