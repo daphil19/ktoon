@@ -8,22 +8,31 @@ import java.math.BigDecimal
  */
 internal object NumberNormalizer {
 
-    fun normalize(value: Double): String =
-        when {
-            value.isNaN() || value.isInfinite() -> "null"
-            value == 0.0 || value == -0.0 -> "0"
-            else ->
-                BigDecimal.valueOf(value).stripTrailingZeros().toPlainString().let {
-                    if (it == "-0" || it == "-0.0") "0" else it
-                }
+    fun normalize(value: Double): String {
+        if (value.isNaN() || value.isInfinite()) return "null"
+        if (value == 0.0) return "0"
+
+        val longValue = value.toLong()
+        if (value == longValue.toDouble()) {
+            return longValue.toString()
         }
 
-    fun normalize(value: Float): String =
-        when {
-            value.isNaN() || value.isInfinite() -> "null"
-            value == 0.0f || value == -0.0f -> "0"
-            else -> normalize(value.toDouble())
+        return BigDecimal.valueOf(value).stripTrailingZeros().toPlainString().let {
+            if (it == "-0" || it == "-0.0") "0" else it
         }
+    }
+
+    fun normalize(value: Float): String {
+        if (value.isNaN() || value.isInfinite()) return "null"
+        if (value == 0.0f) return "0"
+
+        val longValue = value.toLong()
+        if (value == longValue.toFloat()) {
+            return longValue.toString()
+        }
+
+        return normalize(value.toDouble())
+    }
 
     fun normalize(value: Long): String = value.toString()
 

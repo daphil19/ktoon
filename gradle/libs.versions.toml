@@ -3,9 +3,11 @@ kotlin = "2.2.21"
 kotlin-serialization = "1.9.0"
 junit = "6.0.1"
 slf4j = "2.0.17"
+kotlinx-benchmark = "0.4.14"
 
 [libraries]
 kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
+kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinx-benchmark" }
 
 # Testing
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
@@ -17,3 +19,4 @@ jtoon = { module = "dev.toonformat:jtoon", version = "1.0.6" }
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
