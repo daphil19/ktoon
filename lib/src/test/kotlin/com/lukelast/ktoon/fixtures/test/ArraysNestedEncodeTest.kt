@@ -7,39 +7,36 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 /**
- * Tests from arrays-nested.json fixture - Nested and mixed array encoding: arrays of arrays, mixed type arrays, root arrays.
+ * Tests from arrays-nested.json fixture - Nested and mixed array encoding: arrays of arrays, mixed
+ * type arrays, root arrays.
  */
 class ArraysNestedEncodeTest {
     private val fixture = "arrays-nested"
 
     @Test
     fun `encodes nested arrays of primitives`() {
-        @Serializable
-        data class Root(val pairs: List<List<String>>)
+        @Serializable data class Root(val pairs: List<List<String>>)
 
         runFixtureTest<Root>(fixture, "encodes nested arrays of primitives")
     }
 
     @Test
     fun `quotes strings containing delimiters in nested arrays`() {
-        @Serializable
-        data class Root(val pairs: List<List<String>>)
+        @Serializable data class Root(val pairs: List<List<String>>)
 
         runFixtureTest<Root>(fixture, "quotes strings containing delimiters in nested arrays")
     }
 
     @Test
     fun `encodes empty inner arrays`() {
-        @Serializable
-        data class Root(val pairs: List<List<String>>)
+        @Serializable data class Root(val pairs: List<List<String>>)
 
         runFixtureTest<Root>(fixture, "encodes empty inner arrays")
     }
 
     @Test
     fun `encodes mixed-length inner arrays`() {
-        @Serializable
-        data class Root(val pairs: List<List<Int>>)
+        @Serializable data class Root(val pairs: List<List<Int>>)
 
         runFixtureTest<Root>(fixture, "encodes mixed-length inner arrays")
     }
@@ -52,18 +49,22 @@ class ArraysNestedEncodeTest {
 
     @Test
     fun `encodes root-level array of uniform objects in tabular format`() {
-        @Serializable
-        data class Item(val id: Int)
+        @Serializable data class Item(val id: Int)
 
-        runFixtureTest<List<Item>>(fixture, "encodes root-level array of uniform objects in tabular format")
+        runFixtureTest<List<Item>>(
+            fixture,
+            "encodes root-level array of uniform objects in tabular format",
+        )
     }
 
     @Test
     fun `encodes root-level array of non-uniform objects in list format`() {
-        @Serializable
-        data class Item(val id: Int, val name: String? = null)
+        @Serializable data class Item(val id: Int, val name: String? = null)
 
-        runFixtureTest<List<Item>>(fixture, "encodes root-level array of non-uniform objects in list format")
+        runFixtureTest<List<Item>>(
+            fixture,
+            "encodes root-level array of non-uniform objects in list format",
+        )
     }
 
     @Test
@@ -71,7 +72,7 @@ class ArraysNestedEncodeTest {
     fun `encodes root-level array mixing primitive, object, and array of objects in list format`() {
         runFixtureTest<List<JsonElement>>(
             fixture,
-            "encodes root-level array mixing primitive, object, and array of objects in list format"
+            "encodes root-level array mixing primitive, object, and array of objects in list format",
         )
     }
 
@@ -88,10 +89,15 @@ class ArraysNestedEncodeTest {
     @Test
     fun `encodes complex nested structure`() {
         @Serializable
-        data class User(val id: Int, val name: String, val tags: List<String>, val active: Boolean, val prefs: List<String>)
+        data class User(
+            val id: Int,
+            val name: String,
+            val tags: List<String>,
+            val active: Boolean,
+            val prefs: List<String>,
+        )
 
-        @Serializable
-        data class Root(val user: User)
+        @Serializable data class Root(val user: User)
 
         runFixtureTest<Root>(fixture, "encodes complex nested structure")
     }
@@ -99,8 +105,7 @@ class ArraysNestedEncodeTest {
     @Test
     @Disabled
     fun `uses list format for arrays mixing primitives and objects`() {
-        @Serializable
-        data class Root(val items: List<JsonElement>)
+        @Serializable data class Root(val items: List<JsonElement>)
 
         runFixtureTest<Root>(fixture, "uses list format for arrays mixing primitives and objects")
     }
@@ -108,8 +113,7 @@ class ArraysNestedEncodeTest {
     @Test
     @Disabled
     fun `uses list format for arrays mixing objects and arrays`() {
-        @Serializable
-        data class Root(val items: List<JsonElement>)
+        @Serializable data class Root(val items: List<JsonElement>)
 
         runFixtureTest<Root>(fixture, "uses list format for arrays mixing objects and arrays")
     }

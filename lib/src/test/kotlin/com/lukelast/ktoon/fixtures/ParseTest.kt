@@ -1,9 +1,8 @@
 package com.lukelast.ktoon.fixtures
 
 import com.lukelast.ktoon.KeyFoldingMode
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
-import kotlinx.serialization.json.JsonPrimitive
+import org.junit.jupiter.api.Test
 
 class ParseTest {
     @Test
@@ -12,7 +11,10 @@ class ParseTest {
 
         assertEquals("1.4", fixture.version)
         assertEquals(FixtureCategory.encode, fixture.category)
-        assertEquals("Primitive value encoding - strings, numbers, booleans, null", fixture.description)
+        assertEquals(
+            "Primitive value encoding - strings, numbers, booleans, null",
+            fixture.description,
+        )
         assertTrue(fixture.tests.isNotEmpty())
 
         println("Loaded ${fixture.tests.size} test cases from primitives.json")
@@ -34,14 +36,15 @@ class ParseTest {
 
     @Test
     fun `converts options to ToonConfiguration`() {
-        val options = FixtureOptions(
-            delimiter = "\t",
-            indent = 4,
-            strict = false,
-            keyFolding = "safe",
-            flattenDepth = 6,
-            expandPaths = "safe"
-        )
+        val options =
+            FixtureOptions(
+                delimiter = "\t",
+                indent = 4,
+                strict = false,
+                keyFolding = "safe",
+                flattenDepth = 6,
+                expandPaths = "safe",
+            )
 
         val config = options.toToonConfiguration()
 

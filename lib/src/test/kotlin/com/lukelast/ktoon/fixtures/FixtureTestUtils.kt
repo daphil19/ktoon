@@ -9,9 +9,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.serializer
 import org.junit.jupiter.api.Assertions.assertEquals
 
-/**
- * JSON parser for deserializing fixture inputs.
- */
+/** JSON parser for deserializing fixture inputs. */
 private val fixtureInputJson = Json {
     ignoreUnknownKeys = false
     isLenient = false
@@ -29,15 +27,16 @@ fun <T> runFixtureTest(
     fixtureName: String,
     testName: String,
     deserializer: DeserializationStrategy<T>,
-    serializer: SerializationStrategy<T>
+    serializer: SerializationStrategy<T>,
 ) {
     // Construct full fixture path
     val fixturePath = "fixtures/encode/$fixtureName.json"
 
     // Load fixture and find test case
     val fixture = loadFixture(fixturePath)
-    val testCase = fixture.tests.find { it.name == testName }
-        ?: error("Test case '$testName' not found in $fixturePath")
+    val testCase =
+        fixture.tests.find { it.name == testName }
+            ?: error("Test case '$testName' not found in $fixturePath")
 
     // Deserialize input from JsonElement to typed data class
     val input = fixtureInputJson.decodeFromJsonElement(deserializer, testCase.input)
@@ -58,25 +57,14 @@ fun <T> runFixtureTest(
             append("Test '$testName' failed")
             testCase.note?.let { append("\nNote: $it") }
             testCase.specSection?.let { append("\nSpec: §$it") }
-        }
+        },
     )
 }
 
-/**
- * Inline version with reified types for convenience.
- */
-inline fun <reified T> runFixtureTest(
-    fixture: String,
-    testName: String
-) {
-    runFixtureTest(
-        fixture,
-        testName,
-        serializer<T>(),
-        serializer<T>()
-    )
+/** Inline version with reified types for convenience. */
+inline fun <reified T> runFixtureTest(fixture: String, testName: String) {
+    runFixtureTest(fixture, testName, serializer<T>(), serializer<T>())
 }
-
 
 fun JsonElement.asString(): String {
     return (this as? JsonPrimitive)?.content

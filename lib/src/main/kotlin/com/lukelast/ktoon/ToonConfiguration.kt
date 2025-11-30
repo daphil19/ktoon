@@ -4,7 +4,8 @@ package com.lukelast.ktoon
  * Configuration for TOON format encoding and decoding.
  *
  * @property strictMode Enable strict validation of TOON format rules (default: true)
- * @property keyFolding Enable collapsing nested single-key objects into dotted notation (default: OFF)
+ * @property keyFolding Enable collapsing nested single-key objects into dotted notation (default:
+ *   OFF)
  * @property flattenDepth Maximum depth for key folding (default: null, meaning Infinity)
  * @property pathExpansion Enable expanding dotted keys into nested structures when decoding
  *   (default: false)
@@ -58,7 +59,7 @@ enum class KeyFoldingMode {
     /** No folding is performed. */
     OFF,
     /** Fold eligible chains according to safe rules. */
-    SAFE
+    SAFE,
 }
 
 /**
