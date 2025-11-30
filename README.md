@@ -3,6 +3,10 @@
 Kotlin serializer for TOON (Token-Oriented Object Notation). For format details and motivation, see https://toonformat.dev/ and the authoritative spec at https://github.com/toon-format/spec.
 
 ## Add to your project (JitPack)
+
+Check JitPack for versions and more installation instructions:
+https://jitpack.io/#lukelast/ktoon
+
 Using the Gradle Kotlin DSL:
 ```kotlin
 // settings.gradle.kts
