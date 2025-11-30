@@ -1,0 +1,22 @@
+order:
+  id: ORD-2024-001
+  date: "2024-11-04T10:30:00Z"
+  customer:
+    id: 12345
+    name: John Doe
+    email: john@example.com
+  items[3]{sku,name,qty,price}:
+    WIDGET-A1,Premium Widget,2,29.99
+    GADGET-B2,Smart Gadget,1,149.99
+    TOOL-C3,Pro Tool,3,19.99
+  shipping:
+    address: 123 Main St
+    city: San Francisco
+    state: CA
+    zip: "94102"
+    method: express
+  payment:
+    method: credit_card
+    last4: "4242"
+    amount: 269.94
+  status: shipped

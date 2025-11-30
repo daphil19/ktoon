@@ -1,0 +1,366 @@
+package com.lukelast.ktoon.decoding
+
+import com.lukelast.ktoon.ToonConfiguration
+import com.lukelast.ktoon.ToonParsingException
+import com.lukelast.ktoon.ToonValidationException
+import com.lukelast.ktoon.encoding.StringQuoting
+import com.lukelast.ktoon.validation.ValidationEngine
+
+/**
+ * Parser for TOON tokens that builds a logical value structure.
+ *
+ * Converts the flat token stream from ToonLexer into a nested structure of ToonValue objects that
+ * can be consumed by the decoder.
+ *
+ * Handles:
+ * - Object structures (nested key-value pairs)
+ * - All three array formats (inline, tabular, expanded)
+ * - Primitive values
+ * - Validation in strict mode
+ */
+internal class ToonReader(private val tokens: List<Token>, private val config: ToonConfiguration) {
+    private var position = 0
+    private val validator = ValidationEngine(config)
+
+    /** Reads the root value from the token stream. */
+    fun readRoot(): ToonValue {
+        if (tokens.isEmpty()) {
+            return ToonValue.Object(emptyMap())
+        }
+
+        // Determine root type from first token
+        return when (val first = peek()) {
+            is Token.ArrayHeader -> {
+                readArray()
+            }
+            is Token.Dash -> {
+                readExpandedArrayFromRoot()
+            }
+            is Token.Key -> {
+                readObject(baseIndent = 0)
+            }
+            is Token.Value -> {
+                // Root primitive
+                advance()
+                parsePrimitive(first.content, first.line)
+            }
+            else -> {
+                throw ToonParsingException("Unexpected token type at root", 1)
+            }
+        }
+    }
+
+    /** Reads an object (collection of key-value pairs). */
+    private fun readObject(baseIndent: Int): ToonValue.Object {
+        val properties = mutableMapOf<String, ToonValue>()
+
+        while (position < tokens.size) {
+            val token = peek()
+
+            // Check if we've moved back to parent level
+            if (token is Token.Key && token.indent < baseIndent) {
+                break
+            }
+
+            when (token) {
+                is Token.Key -> {
+                    advance()
+                    val key = StringQuoting.unquote(token.name, token.line)
+
+                    // Check for duplicate keys in strict mode
+                    if (config.strictMode && properties.containsKey(key)) {
+                        throw ToonValidationException.duplicateKey(key, token.line)
+                    }
+
+                    // Read the value
+                    val value = readValue(token.indent)
+                    properties[key] = value
+                }
+                is Token.ArrayHeader -> {
+                    val arrayValue = readArray()
+                    if (arrayValue is ToonValue.Array) {
+                        val key = StringQuoting.unquote(token.key, token.line)
+                        properties[key] = arrayValue
+                    }
+                }
+                else -> {
+                    // Unexpected token
+                    break
+                }
+            }
+        }
+
+        return ToonValue.Object(properties)
+    }
+
+    /** Reads a value (can be primitive, object, or array). */
+    private fun readValue(parentIndent: Int): ToonValue {
+        if (position >= tokens.size) {
+            return ToonValue.Null
+        }
+
+        return when (val token = peek()) {
+            is Token.Value -> {
+                advance()
+                parsePrimitive(token.content, token.line)
+            }
+            is Token.ArrayHeader -> {
+                readArray()
+            }
+            is Token.Key -> {
+                // Nested object
+                readObject(baseIndent = parentIndent + config.indentSize)
+            }
+            else -> {
+                ToonValue.Null
+            }
+        }
+    }
+
+    /** Reads an array in any format (inline, tabular, or expanded). */
+    private fun readArray(): ToonValue.Array {
+        val header = consume<Token.ArrayHeader>()
+
+        // Determine array format
+        return when {
+            // Tabular format (has fields)
+            header.fields != null -> {
+                readTabularArray(header)
+            }
+            // Check next token to distinguish inline vs expanded
+            position < tokens.size && peek() is Token.InlineArrayValue -> {
+                readInlineArray(header)
+            }
+            // Expanded format (dash markers)
+            else -> {
+                readExpandedArray(header)
+            }
+        }
+    }
+
+    /** Reads an inline array: `key[3]: val1,val2,val3` */
+    private fun readInlineArray(header: Token.ArrayHeader): ToonValue.Array {
+        val valueToken = consume<Token.InlineArrayValue>()
+
+        // Split by delimiter
+        val values =
+            valueToken.content
+                .split(header.delimiter.char)
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .map { parsePrimitive(it, valueToken.line) }
+
+        // Validate array length in strict mode
+        validator.validateArrayLength(header.length, values.size, header.line)
+
+        return ToonValue.Array(values)
+    }
+
+    /** Reads a tabular array: `key[2]{id,name}:\n 1,Alice\n 2,Bob` */
+    private fun readTabularArray(header: Token.ArrayHeader): ToonValue.Array {
+        val fields =
+            header.fields
+                ?: throw ToonParsingException("Tabular array missing field list", header.line)
+
+        val elements = mutableListOf<ToonValue.Object>()
+        val expectedIndent = header.indent + config.indentSize
+
+        while (position < tokens.size) {
+            val token = peek()
+
+            // Check if this is a row at the correct indentation
+            if (token is Token.Key && token.indent == expectedIndent) {
+                // This is actually a simple key-value, not a tabular row
+                // Parse it as a row of values
+                val rowContent = token.name
+                val values =
+                    rowContent
+                        .split(header.delimiter.char)
+                        .map { it.trim() }
+                        .map { parsePrimitive(it, token.line) }
+
+                // Validate field count
+                validator.validateTabularRow(fields.size, values.size, elements.size, token.line)
+
+                // Create object from fields and values
+                val obj = fields.zip(values).toMap()
+                elements.add(ToonValue.Object(obj))
+
+                advance()
+            } else if (token is Token.Value) {
+                // Value-only line (no key) - this is a tabular row
+                val values =
+                    token.content
+                        .split(header.delimiter.char)
+                        .map { it.trim() }
+                        .map { parsePrimitive(it, token.line) }
+
+                // Validate field count
+                validator.validateTabularRow(fields.size, values.size, elements.size, token.line)
+
+                // Create object from fields and values
+                val obj = fields.zip(values).toMap()
+                elements.add(ToonValue.Object(obj))
+
+                advance()
+            } else {
+                // End of array
+                break
+            }
+
+            // Check if we have all expected elements
+            if (elements.size >= header.length) {
+                break
+            }
+        }
+
+        // Validate array length
+        validator.validateArrayLength(header.length, elements.size, header.line)
+
+        return ToonValue.Array(elements)
+    }
+
+    /** Reads an expanded array: `key[2]:\n - val1\n - val2` */
+    private fun readExpandedArray(header: Token.ArrayHeader): ToonValue.Array {
+        val elements = mutableListOf<ToonValue>()
+        val expectedIndent = header.indent + config.indentSize
+
+        while (position < tokens.size) {
+            val token = peek()
+
+            if (token is Token.Dash && token.indent == expectedIndent) {
+                advance()
+                val value = readValue(expectedIndent)
+                elements.add(value)
+            } else if (token is Token.Key && token.indent < expectedIndent) {
+                // Back to parent level
+                break
+            } else {
+                break
+            }
+
+            // Check if we have all expected elements
+            if (elements.size >= header.length) {
+                break
+            }
+        }
+
+        // Validate array length
+        validator.validateArrayLength(header.length, elements.size, header.line)
+
+        return ToonValue.Array(elements)
+    }
+
+    /** Reads an expanded array from root (no header, starts with dashes). */
+    private fun readExpandedArrayFromRoot(): ToonValue.Array {
+        val elements = mutableListOf<ToonValue>()
+
+        while (position < tokens.size && peek() is Token.Dash) {
+            advance()
+            val value = readValue(0)
+            elements.add(value)
+        }
+
+        return ToonValue.Array(elements)
+    }
+
+    /** Parses a primitive value from a string. */
+    private fun parsePrimitive(content: String, line: Int): ToonValue {
+        // Unquote if quoted
+        val unquoted = StringQuoting.unquote(content, line)
+
+        // Check for null
+        if (unquoted == "null") {
+            return ToonValue.Null
+        }
+
+        // Check for boolean
+        if (unquoted == "true") {
+            return ToonValue.Boolean(true)
+        }
+        if (unquoted == "false") {
+            return ToonValue.Boolean(false)
+        }
+
+        // Try to parse as number
+        val numberValue = tryParseNumber(unquoted)
+        if (numberValue != null) {
+            return numberValue
+        }
+
+        // Default to string
+        return ToonValue.String(unquoted)
+    }
+
+    /** Tries to parse a string as a number. Returns null if not a valid number. */
+    private fun tryParseNumber(str: String): ToonValue? {
+        // Try integer first
+        val intValue = str.toIntOrNull()
+        if (intValue != null) {
+            return ToonValue.Number(intValue)
+        }
+
+        // Try long
+        val longValue = str.toLongOrNull()
+        if (longValue != null) {
+            return ToonValue.Number(longValue)
+        }
+
+        // Try double
+        val doubleValue = str.toDoubleOrNull()
+        if (doubleValue != null) {
+            return ToonValue.Number(doubleValue)
+        }
+
+        return null
+    }
+
+    /** Peeks at the current token without consuming it. */
+    private fun peek(): Token {
+        if (position >= tokens.size) {
+            throw ToonParsingException.unexpectedEndOfInput("more tokens")
+        }
+        return tokens[position]
+    }
+
+    /** Advances to the next token and returns the current one. */
+    private fun advance(): Token {
+        val token = peek()
+        position++
+        return token
+    }
+
+    /** Consumes a token of the expected type. */
+    private inline fun <reified T : Token> consume(): T {
+        val token = peek()
+        if (token !is T) {
+            throw ToonParsingException(
+                "Expected ${T::class.simpleName}, got ${token::class.simpleName}",
+                -1,
+            )
+        }
+        position++
+        return token
+    }
+}
+
+/** Represents a parsed TOON value. */
+internal sealed class ToonValue {
+    /** Null value */
+    object Null : ToonValue()
+
+    /** Boolean value */
+    data class Boolean(val value: kotlin.Boolean) : ToonValue()
+
+    /** Numeric value (Int, Long, or Double) */
+    data class Number(val value: kotlin.Number) : ToonValue()
+
+    /** String value */
+    data class String(val value: kotlin.String) : ToonValue()
+
+    /** Object (map of key-value pairs) */
+    data class Object(val properties: Map<kotlin.String, ToonValue>) : ToonValue()
+
+    /** Array (list of values) */
+    data class Array(val elements: List<ToonValue>) : ToonValue()
+}

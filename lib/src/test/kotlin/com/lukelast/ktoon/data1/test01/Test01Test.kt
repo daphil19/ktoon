@@ -1,0 +1,28 @@
+package com.lukelast.ktoon.data1.test01
+
+import com.lukelast.ktoon.data1.doTest
+import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.Test
+
+/** Example from https://toontools.vercel.app/tools/json-to-toon "Simple Example". */
+class Test01Test {
+    @Test fun test() = doTest(this, data)
+}
+
+@Serializable data class UserList(val users: List<User>)
+
+@Serializable
+data class User(
+    val id: Int,
+    val name: String,
+    val role: String, // See note below about using Enums here
+)
+
+val data =
+    UserList(
+        users =
+            listOf(
+                User(id = 1, name = "Alice", role = "admin"),
+                User(id = 2, name = "Bob", role = "user"),
+            )
+    )
