@@ -1,0 +1,20 @@
+owner: "Mr. \"Robot\" : Admin"
+location: "Area 51, Nevada"
+capacity: 0
+inventory[1]:
+  - vin: "null"
+    make: "true"
+    model: "911"
+    year: 0
+    isStreetLegal: false
+    engineSpec:
+      type: ""
+      displacement: 0.000001
+      horsepower: 0
+      torque: -100
+    features[5]: ",",":","["," ","-"
+    lapTimes[2]{track,seconds}:
+      "Track, A",60
+      Track B,120.5
+    modifications[1]{name,cost,dateInstalled}:
+      "- Negative Camber",null,2025-01-01 🏁

@@ -1,0 +1,19 @@
+owner: Frank
+location: Driveway
+capacity: 1
+inventory[1]:
+  - vin: PORS718GT4
+    make: Porsche
+    model: 718 Cayman GT4
+    year: 2023
+    isStreetLegal: true
+    engineSpec:
+      type: Flat-6 NA
+      displacement: 4
+      horsepower: 414
+      torque: 309
+    features[1]: Bucket Seats
+    lapTimes[1]{track,seconds}:
+      Hockenheim,108.5
+    modifications[1]{name,cost,dateInstalled}:
+      Brake Pads,600,2023-05-20

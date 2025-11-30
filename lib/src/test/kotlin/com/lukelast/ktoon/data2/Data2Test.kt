@@ -19,12 +19,11 @@ class Data2Test {
         listOf(
                 TestData("test01", com.lukelast.ktoon.data2.test01.data),
                 TestData("test02", com.lukelast.ktoon.data2.test02.data),
+                TestData("test03", com.lukelast.ktoon.data2.test03.data),
+                TestData("test04", com.lukelast.ktoon.data2.test04.data),
+                TestData("test05", com.lukelast.ktoon.data2.test05.data),
             )
-            .map { testData ->
-                dynamicTest("Test ${testData.name}") {
-                    doTest(testData)
-                }
-            }
+            .map { testData -> dynamicTest("Test ${testData.name}") { doTest(testData) } }
 }
 
 private data class TestData<T>(val name: String, val data: T)
