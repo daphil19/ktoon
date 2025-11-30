@@ -122,17 +122,8 @@ internal class ToonArrayEncoder(
         }
     }
 
-    private fun writeHeader(key: String?) {
-        if (key != null) writer.writeArrayHeader(key, elements.size, config.delimiter.char)
-        else {
-            writer.write("[${elements.size}")
-            if (config.delimiter.char != ',') writer.write(config.delimiter.char.toString())
-            writer.write("]:")
-        }
-    }
-
     private fun writeInline() {
-        writeHeader(key)
+        writeArrayHeader(key, elements.size, config.delimiter.char)
         if (elements.isNotEmpty()) writer.writeSpace()
         elements.forEachIndexed { i, e ->
             if (e is EncodedElement.Primitive) {
@@ -143,33 +134,12 @@ internal class ToonArrayEncoder(
     }
 
     private fun writeTabular() {
-        if (elements.isEmpty()) {
-            writeInline()
-            return
-        }
-        val first =
-            elements.first() as? EncodedElement.Structure
-                ?: throw ToonEncodingException.unsupportedType("Non-structure in tabular array")
-        val fields = ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
-        if (key != null)
-            writer.writeTabularArrayHeader(key, elements.size, fields, config.delimiter.char)
-        else {
-            writer.write("[${elements.size}")
-            if (config.delimiter.char != ',') writer.write(config.delimiter.char.toString())
-            writer.write("]{${fields.joinToString(config.delimiter.char.toString())}}:")
-        }
-        elements.filterIsInstance<EncodedElement.Structure>().forEach { s ->
-            writer.writeNewline()
-            writer.writeIndent(indentLevel + 1)
-            s.values.forEachIndexed { i, (_, v) ->
-                writer.write(if (v is EncodedElement.Primitive) v.value else v.toString())
-                if (i < s.values.lastIndex) writer.writeDelimiter()
-            }
-        }
+        if (elements.isEmpty()) { writeInline(); return }
+        writeTabularImpl(key, elements, indentLevel)
     }
 
     private fun writeExpanded() {
-        writeHeader(key)
+        writeArrayHeader(key, elements.size, config.delimiter.char)
         elements.forEach { writeElement(it, indentLevel + 1) }
     }
 
@@ -181,117 +151,60 @@ internal class ToonArrayEncoder(
         when (element) {
             is EncodedElement.Primitive -> writer.write(element.value)
             is EncodedElement.Structure -> writeStructureFields(element.values, indent)
-            is EncodedElement.NestedArray -> writeNestedArray(element.elements, indent)
+            is EncodedElement.NestedArray -> writeNestedArrayImpl(null, element.elements, indent)
         }
     }
 
-    private fun writeStructureFields(values: List<Pair<String, EncodedElement>>, indent: Int) {
+    private fun writeStructureFields(values: List<Pair<String, EncodedElement>>, indent: Int, firstInline: Boolean = true) {
+        if (values.isEmpty() && !firstInline) { writer.writeSpace(); writer.write("{}"); return }
         values.forEachIndexed { i, (name, value) ->
-            if (i > 0) {
-                writer.writeNewline()
-                writer.writeIndent(indent + 1)
-            }
+            if (i > 0 || !firstInline) { writer.writeNewline(); writer.writeIndent(indent + 1) }
             val qk = quoteKey(name)
             when (value) {
                 is EncodedElement.Primitive -> writer.writeKeyValue(qk, value.value)
-                is EncodedElement.NestedArray ->
-                    writeNestedArrayField(qk, value.elements, indent + 1)
-                is EncodedElement.Structure -> {
-                    writer.writeKey(qk)
-                    writeNestedStructure(value.values, indent + 1)
-                }
+                is EncodedElement.NestedArray -> writeNestedArrayImpl(qk, value.elements, indent + 1)
+                is EncodedElement.Structure -> { writer.writeKey(qk); writeStructureFields(value.values, indent + 1, false) }
             }
         }
     }
 
-    private fun writeNestedStructure(values: List<Pair<String, EncodedElement>>, indent: Int) {
-        if (values.isEmpty()) {
-            writer.writeSpace()
-            writer.write("{}")
-            return
+    private fun writeNestedArrayImpl(key: String?, elements: List<EncodedElement>, indent: Int) {
+        val format = ArrayFormatSelector.selectFormat(elements)
+        val delim = config.delimiter.char
+        when (format) {
+            ArrayFormatSelector.ArrayFormat.INLINE -> {
+                writeArrayHeader(key, elements.size, delim)
+                if (elements.isNotEmpty()) writer.writeSpace()
+                elements.forEachIndexed { i, e ->
+                    writer.write((e as EncodedElement.Primitive).value)
+                    if (i < elements.lastIndex) writer.writeDelimiter()
+                }
+            }
+            ArrayFormatSelector.ArrayFormat.TABULAR -> writeTabularImpl(key, elements, indent)
+            ArrayFormatSelector.ArrayFormat.EXPANDED -> {
+                writeArrayHeader(key, elements.size, delim)
+                elements.forEach { writeElement(it, indent + 1) }
+            }
         }
-        values.forEach { (name, value) ->
+    }
+
+    private fun writeArrayHeader(key: String?, size: Int, delim: Char) {
+        if (key != null) writer.writeArrayHeader(key, size, delim)
+        else { writer.write("[$size"); if (delim != ',') writer.write(delim.toString()); writer.write("]:") }
+    }
+
+    private fun writeTabularImpl(key: String?, elements: List<EncodedElement>, indent: Int) {
+        val first = elements.first() as EncodedElement.Structure
+        val fields = ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
+        val delim = config.delimiter.char
+        if (key != null) writer.writeTabularArrayHeader(key, elements.size, fields, delim)
+        else { writer.write("[${elements.size}"); if (delim != ',') writer.write(delim.toString()); writer.write("]{${fields.joinToString(delim.toString())}}:") }
+        elements.filterIsInstance<EncodedElement.Structure>().forEach { s ->
             writer.writeNewline()
             writer.writeIndent(indent + 1)
-            val qk = quoteKey(name)
-            when (value) {
-                is EncodedElement.Primitive -> writer.writeKeyValue(qk, value.value)
-                is EncodedElement.NestedArray ->
-                    writeNestedArrayField(qk, value.elements, indent + 1)
-                is EncodedElement.Structure -> {
-                    writer.writeKey(qk)
-                    writeNestedStructure(value.values, indent + 1)
-                }
-            }
-        }
-    }
-
-    private fun writeNestedArray(elements: List<EncodedElement>, indent: Int) {
-        val format = ArrayFormatSelector.selectFormat(elements)
-        when (format) {
-            ArrayFormatSelector.ArrayFormat.INLINE -> {
-                writer.write("[${elements.size}")
-                if (config.delimiter.char != ',') writer.write(config.delimiter.char.toString())
-                writer.write("]:")
-                if (elements.isNotEmpty()) writer.writeSpace()
-                elements.forEachIndexed { i, e ->
-                    writer.write((e as EncodedElement.Primitive).value)
-                    if (i < elements.lastIndex) writer.writeDelimiter()
-                }
-            }
-            ArrayFormatSelector.ArrayFormat.TABULAR -> {
-                val first = elements.first() as EncodedElement.Structure
-                val fields =
-                    ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
-                writer.write("[${elements.size}")
-                if (config.delimiter.char != ',') writer.write(config.delimiter.char.toString())
-                writer.write("]{${fields.joinToString(config.delimiter.char.toString())}}:")
-                elements.filterIsInstance<EncodedElement.Structure>().forEach { s ->
-                    writer.writeNewline()
-                    writer.writeIndent(indent + 1)
-                    s.values.forEachIndexed { i, (_, v) ->
-                        writer.write(if (v is EncodedElement.Primitive) v.value else v.toString())
-                        if (i < s.values.lastIndex) writer.writeDelimiter()
-                    }
-                }
-            }
-            ArrayFormatSelector.ArrayFormat.EXPANDED -> {
-                writer.write("[${elements.size}")
-                if (config.delimiter.char != ',') writer.write(config.delimiter.char.toString())
-                writer.write("]:")
-                elements.forEach { writeElement(it, indent + 1) }
-            }
-        }
-    }
-
-    private fun writeNestedArrayField(key: String, elements: List<EncodedElement>, indent: Int) {
-        val format = ArrayFormatSelector.selectFormat(elements)
-        when (format) {
-            ArrayFormatSelector.ArrayFormat.INLINE -> {
-                writer.writeArrayHeader(key, elements.size, config.delimiter.char)
-                if (elements.isNotEmpty()) writer.writeSpace()
-                elements.forEachIndexed { i, e ->
-                    writer.write((e as EncodedElement.Primitive).value)
-                    if (i < elements.lastIndex) writer.writeDelimiter()
-                }
-            }
-            ArrayFormatSelector.ArrayFormat.TABULAR -> {
-                val first = elements.first() as EncodedElement.Structure
-                val fields =
-                    ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
-                writer.writeTabularArrayHeader(key, elements.size, fields, config.delimiter.char)
-                elements.filterIsInstance<EncodedElement.Structure>().forEach { s ->
-                    writer.writeNewline()
-                    writer.writeIndent(indent + 1)
-                    s.values.forEachIndexed { i, (_, v) ->
-                        writer.write(if (v is EncodedElement.Primitive) v.value else v.toString())
-                        if (i < s.values.lastIndex) writer.writeDelimiter()
-                    }
-                }
-            }
-            ArrayFormatSelector.ArrayFormat.EXPANDED -> {
-                writer.writeArrayHeader(key, elements.size, config.delimiter.char)
-                elements.forEach { writeElement(it, indent + 1) }
+            s.values.forEachIndexed { i, (_, v) ->
+                writer.write(if (v is EncodedElement.Primitive) v.value else v.toString())
+                if (i < s.values.lastIndex) writer.writeDelimiter()
             }
         }
     }
