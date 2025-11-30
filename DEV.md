@@ -1,6 +1,6 @@
 # Development Guide
 
-Use the Gradle wrapper (`./gradlew`) and JDK 17 to match the toolchain used by the library and demo.
+Use the Gradle wrapper (`./gradlew`) and JDK 17+.
 
 ## Testing
 - `./gradlew test` — run all tests.

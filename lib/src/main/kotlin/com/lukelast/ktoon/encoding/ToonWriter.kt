@@ -7,14 +7,14 @@ internal class ToonWriter(private val config: ToonConfiguration, initialCapacity
     private val buffer = StringBuilder(initialCapacity)
     private var atLineStart = true
 
-    private val indentCache = Array(17) { " ".repeat(it * config.indentSize) }
-
     fun writeIndent(level: Int) {
         if (!atLineStart) return
-        buffer.append(
-            if (level < indentCache.size) indentCache[level]
-            else " ".repeat(level * config.indentSize)
-        )
+        val totalSpaces = level * config.indentSize
+        if (totalSpaces < spacesCache.size) {
+            buffer.append(spacesCache[totalSpaces])
+        } else {
+            buffer.append(" ".repeat(totalSpaces))
+        }
         atLineStart = false
     }
 
@@ -62,4 +62,8 @@ internal class ToonWriter(private val config: ToonConfiguration, initialCapacity
     override fun toString(): String = buffer.toString()
 
     fun length(): Int = buffer.length
+
+    companion object {
+        private val spacesCache = Array(256) { " ".repeat(it) }
+    }
 }
