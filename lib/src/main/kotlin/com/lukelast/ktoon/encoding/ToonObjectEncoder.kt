@@ -15,7 +15,6 @@ internal class ToonObjectEncoder(
     private val writer: ToonWriter,
     private val config: ToonConfiguration,
     override val serializersModule: SerializersModule,
-    private val descriptor: SerialDescriptor,
     private val indentLevel: Int,
     private val isRoot: Boolean = false,
 ) : AbstractEncoder() {
@@ -64,12 +63,11 @@ internal class ToonObjectEncoder(
             StructureKind.MAP -> {
                 writeKey(key)
                 ToonObjectEncoder(
-                    writer,
-                    config,
-                    serializersModule,
-                    descriptor,
-                    indentLevel + 1,
-                    false,
+                    writer = writer,
+                    config = config,
+                    serializersModule = serializersModule,
+                    indentLevel = indentLevel + 1,
+                    isRoot = false,
                 )
             }
             StructureKind.LIST ->

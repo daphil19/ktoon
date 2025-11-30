@@ -61,10 +61,5 @@ internal class ToonWriter(private val config: ToonConfiguration, initialCapacity
 
     override fun toString(): String = buffer.toString()
 
-    fun clear() {
-        buffer.clear()
-        atLineStart = true
-    }
-
     fun length(): Int = buffer.length
 }

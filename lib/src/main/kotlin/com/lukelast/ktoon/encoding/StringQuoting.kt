@@ -15,7 +15,6 @@ internal object StringQuoting {
         OBJECT_KEY,
         OBJECT_VALUE,
         ARRAY_ELEMENT,
-        ROOT,
     }
 
     fun needsQuoting(
@@ -31,7 +30,6 @@ internal object StringQuoting {
             QuotingContext.OBJECT_KEY -> !UNQUOTED_KEY_PATTERN.matches(str)
             QuotingContext.ARRAY_ELEMENT,
             QuotingContext.OBJECT_VALUE -> str.contains(delimiter)
-            else -> false
         }
     }
 
