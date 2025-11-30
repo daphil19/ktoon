@@ -11,33 +11,60 @@ internal class ToonWriter(private val config: ToonConfiguration, initialCapacity
 
     fun writeIndent(level: Int) {
         if (!atLineStart) return
-        buffer.append(if (level < indentCache.size) indentCache[level] else " ".repeat(level * config.indentSize))
+        buffer.append(
+            if (level < indentCache.size) indentCache[level]
+            else " ".repeat(level * config.indentSize)
+        )
         atLineStart = false
     }
 
-    fun writeKey(key: String) { buffer.append(key).append(':') }
-    fun writeKeyValue(key: String, value: String) { buffer.append(key).append(": ").append(value) }
-    fun write(value: String) { buffer.append(value) }
-    fun writeSpace() { buffer.append(' ') }
-    fun writeDelimiter() { buffer.append(config.delimiter.char) }
-    fun writeNewline() { buffer.append('\n'); atLineStart = true }
-    fun writeDash() { buffer.append('-') }
+    fun writeKey(key: String) {
+        buffer.append(key).append(':')
+    }
+
+    fun writeKeyValue(key: String, value: String) {
+        buffer.append(key).append(": ").append(value)
+    }
+
+    fun write(value: String) {
+        buffer.append(value)
+    }
+
+    fun writeSpace() {
+        buffer.append(' ')
+    }
+
+    fun writeDelimiter() {
+        buffer.append(config.delimiter.char)
+    }
+
+    fun writeNewline() {
+        buffer.append('\n')
+        atLineStart = true
+    }
+
+    fun writeDash() {
+        buffer.append('-')
+    }
 
     fun writeArrayHeader(key: String, length: Int, delimiter: Char) {
         buffer.append(key).append('[').append(length)
         if (delimiter != ',') buffer.append(delimiter)
-        buffer.append("]:") 
+        buffer.append("]:")
     }
 
     fun writeTabularArrayHeader(key: String, length: Int, fields: List<String>, delimiter: Char) {
         buffer.append(key).append('[').append(length)
         if (delimiter != ',') buffer.append(delimiter)
-        buffer.append("]{")
-            .append(fields.joinToString(delimiter.toString()))
-            .append("}:")
+        buffer.append("]{").append(fields.joinToString(delimiter.toString())).append("}:")
     }
 
     override fun toString(): String = buffer.toString()
-    fun clear() { buffer.clear(); atLineStart = true }
+
+    fun clear() {
+        buffer.clear()
+        atLineStart = true
+    }
+
     fun length(): Int = buffer.length
 }

@@ -34,25 +34,43 @@ internal class ToonObjectEncoder(
     }
 
     override fun encodeNull() = writeKeyAndValue("null")
+
     override fun encodeBoolean(value: Boolean) = writeKeyAndValue(if (value) "true" else "false")
+
     override fun encodeByte(value: Byte) = writeKeyAndValue(NumberNormalizer.normalize(value))
+
     override fun encodeShort(value: Short) = writeKeyAndValue(NumberNormalizer.normalize(value))
+
     override fun encodeInt(value: Int) = writeKeyAndValue(NumberNormalizer.normalize(value))
+
     override fun encodeLong(value: Long) = writeKeyAndValue(NumberNormalizer.normalize(value))
+
     override fun encodeFloat(value: Float) = writeKeyAndValue(NumberNormalizer.normalize(value))
+
     override fun encodeDouble(value: Double) = writeKeyAndValue(NumberNormalizer.normalize(value))
 
     override fun encodeChar(value: Char) = writeKeyAndValue(quoteValue(value.toString()))
+
     override fun encodeString(value: String) = writeKeyAndValue(quoteValue(value))
+
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) =
         writeKeyAndValue(quoteValue(enumDescriptor.getElementName(index)))
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
         val key = currentKey ?: "value"
         return when (descriptor.kind) {
-            StructureKind.CLASS, StructureKind.OBJECT, StructureKind.MAP -> {
+            StructureKind.CLASS,
+            StructureKind.OBJECT,
+            StructureKind.MAP -> {
                 writeKey(key)
-                ToonObjectEncoder(writer, config, serializersModule, descriptor, indentLevel + 1, false)
+                ToonObjectEncoder(
+                    writer,
+                    config,
+                    serializersModule,
+                    descriptor,
+                    indentLevel + 1,
+                    false,
+                )
             }
             StructureKind.LIST ->
                 ToonArrayEncoder(
@@ -60,13 +78,13 @@ internal class ToonObjectEncoder(
                     config = config,
                     serializersModule = serializersModule,
                     indentLevel = indentLevel,
-                    key = key
+                    key = key,
                 )
             else -> this
         }
     }
 
-    override fun endStructure(descriptor: SerialDescriptor) { }
+    override fun endStructure(descriptor: SerialDescriptor) {}
 
     private fun quoteValue(value: String) =
         StringQuoting.quote(value, StringQuoting.QuotingContext.OBJECT_VALUE, config.delimiter.char)

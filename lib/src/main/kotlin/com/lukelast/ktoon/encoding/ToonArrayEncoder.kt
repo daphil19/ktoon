@@ -24,7 +24,12 @@ internal class ToonArrayEncoder(
 
     sealed class EncodedElement {
         data class Primitive(val value: String) : EncodedElement()
-        data class Structure(val descriptor: SerialDescriptor, val values: List<Pair<String, EncodedElement>>) : EncodedElement()
+
+        data class Structure(
+            val descriptor: SerialDescriptor,
+            val values: List<Pair<String, EncodedElement>>,
+        ) : EncodedElement()
+
         data class NestedArray(val elements: List<EncodedElement>) : EncodedElement()
     }
 
@@ -34,29 +39,76 @@ internal class ToonArrayEncoder(
         return true
     }
 
-    private fun addPrimitive(value: String) { elements.add(EncodedElement.Primitive(value)) }
-    private fun quote(value: String) = StringQuoting.quote(value, StringQuoting.QuotingContext.ARRAY_ELEMENT, config.delimiter.char)
-    private fun quoteKey(value: String) = StringQuoting.quote(value, StringQuoting.QuotingContext.OBJECT_KEY, config.delimiter.char)
+    private fun addPrimitive(value: String) {
+        elements.add(EncodedElement.Primitive(value))
+    }
 
-    override fun encodeNull() { addPrimitive("null") }
-    override fun encodeBoolean(value: Boolean) { addPrimitive(if (value) "true" else "false") }
-    override fun encodeByte(value: Byte) { addPrimitive(NumberNormalizer.normalize(value)) }
-    override fun encodeShort(value: Short) { addPrimitive(NumberNormalizer.normalize(value)) }
-    override fun encodeInt(value: Int) { addPrimitive(NumberNormalizer.normalize(value)) }
-    override fun encodeLong(value: Long) { addPrimitive(NumberNormalizer.normalize(value)) }
-    override fun encodeFloat(value: Float) { addPrimitive(NumberNormalizer.normalize(value)) }
-    override fun encodeDouble(value: Double) { addPrimitive(NumberNormalizer.normalize(value)) }
-    override fun encodeChar(value: Char) { addPrimitive(quote(value.toString())) }
-    override fun encodeString(value: String) { addPrimitive(quote(value)) }
-    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) { addPrimitive(quote(enumDescriptor.getElementName(index))) }
+    private fun quote(value: String) =
+        StringQuoting.quote(
+            value,
+            StringQuoting.QuotingContext.ARRAY_ELEMENT,
+            config.delimiter.char,
+        )
+
+    private fun quoteKey(value: String) =
+        StringQuoting.quote(value, StringQuoting.QuotingContext.OBJECT_KEY, config.delimiter.char)
+
+    override fun encodeNull() {
+        addPrimitive("null")
+    }
+
+    override fun encodeBoolean(value: Boolean) {
+        addPrimitive(if (value) "true" else "false")
+    }
+
+    override fun encodeByte(value: Byte) {
+        addPrimitive(NumberNormalizer.normalize(value))
+    }
+
+    override fun encodeShort(value: Short) {
+        addPrimitive(NumberNormalizer.normalize(value))
+    }
+
+    override fun encodeInt(value: Int) {
+        addPrimitive(NumberNormalizer.normalize(value))
+    }
+
+    override fun encodeLong(value: Long) {
+        addPrimitive(NumberNormalizer.normalize(value))
+    }
+
+    override fun encodeFloat(value: Float) {
+        addPrimitive(NumberNormalizer.normalize(value))
+    }
+
+    override fun encodeDouble(value: Double) {
+        addPrimitive(NumberNormalizer.normalize(value))
+    }
+
+    override fun encodeChar(value: Char) {
+        addPrimitive(quote(value.toString()))
+    }
+
+    override fun encodeString(value: String) {
+        addPrimitive(quote(value))
+    }
+
+    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
+        addPrimitive(quote(enumDescriptor.getElementName(index)))
+    }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
         if (elementDescriptor == null) elementDescriptor = descriptor
         return when (descriptor.kind) {
-            StructureKind.CLASS, StructureKind.OBJECT ->
-                ElementCapturer(config, serializersModule, descriptor) { elements.add(EncodedElement.Structure(descriptor, it)) }
+            StructureKind.CLASS,
+            StructureKind.OBJECT ->
+                ElementCapturer(config, serializersModule, descriptor) {
+                    elements.add(EncodedElement.Structure(descriptor, it))
+                }
             StructureKind.LIST ->
-                ElementCapturer(config, serializersModule, descriptor) { elements.add(EncodedElement.NestedArray(it.map { (_, v) -> v })) }
+                ElementCapturer(config, serializersModule, descriptor) {
+                    elements.add(EncodedElement.NestedArray(it.map { (_, v) -> v }))
+                }
             else -> this
         }
     }
@@ -71,14 +123,19 @@ internal class ToonArrayEncoder(
     }
 
     private fun selectFormat(): ArrayFormatSelector.ArrayFormat {
-        if (elements.all { it is EncodedElement.Primitive }) return ArrayFormatSelector.ArrayFormat.INLINE
+        if (elements.all { it is EncodedElement.Primitive })
+            return ArrayFormatSelector.ArrayFormat.INLINE
         if (elements.all { it is EncodedElement.Structure }) {
             val structures = elements.filterIsInstance<EncodedElement.Structure>()
             if (structures.isNotEmpty()) {
                 val first = structures.first()
-                val allSame = structures.all { it.descriptor == first.descriptor }
-                        && ArrayFormatSelector.allPropertiesArePrimitive(first.descriptor)
-                        && structures.all { it.values.map { p -> p.first }.toSet() == first.values.map { p -> p.first }.toSet() }
+                val allSame =
+                    structures.all { it.descriptor == first.descriptor } &&
+                        ArrayFormatSelector.allPropertiesArePrimitive(first.descriptor) &&
+                        structures.all {
+                            it.values.map { p -> p.first }.toSet() ==
+                                first.values.map { p -> p.first }.toSet()
+                        }
                 if (allSame) return ArrayFormatSelector.ArrayFormat.TABULAR
             }
         }
@@ -106,11 +163,16 @@ internal class ToonArrayEncoder(
     }
 
     private fun writeTabular() {
-        if (elements.isEmpty()) { writeInline(); return }
-        val first = elements.first() as? EncodedElement.Structure
-            ?: throw ToonEncodingException.unsupportedType("Non-structure in tabular array")
+        if (elements.isEmpty()) {
+            writeInline()
+            return
+        }
+        val first =
+            elements.first() as? EncodedElement.Structure
+                ?: throw ToonEncodingException.unsupportedType("Non-structure in tabular array")
         val fields = ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
-        if (key != null) writer.writeTabularArrayHeader(key, elements.size, fields, config.delimiter.char)
+        if (key != null)
+            writer.writeTabularArrayHeader(key, elements.size, fields, config.delimiter.char)
         else {
             writer.write("[${elements.size}")
             if (config.delimiter.char != ',') writer.write(config.delimiter.char.toString())
@@ -145,26 +207,41 @@ internal class ToonArrayEncoder(
 
     private fun writeStructureFields(values: List<Pair<String, EncodedElement>>, indent: Int) {
         values.forEachIndexed { i, (name, value) ->
-            if (i > 0) { writer.writeNewline(); writer.writeIndent(indent + 1) }
+            if (i > 0) {
+                writer.writeNewline()
+                writer.writeIndent(indent + 1)
+            }
             val qk = quoteKey(name)
             when (value) {
                 is EncodedElement.Primitive -> writer.writeKeyValue(qk, value.value)
-                is EncodedElement.NestedArray -> writeNestedArrayField(qk, value.elements, indent + 1)
-                is EncodedElement.Structure -> { writer.writeKey(qk); writeNestedStructure(value.values, indent + 1) }
+                is EncodedElement.NestedArray ->
+                    writeNestedArrayField(qk, value.elements, indent + 1)
+                is EncodedElement.Structure -> {
+                    writer.writeKey(qk)
+                    writeNestedStructure(value.values, indent + 1)
+                }
             }
         }
     }
 
     private fun writeNestedStructure(values: List<Pair<String, EncodedElement>>, indent: Int) {
-        if (values.isEmpty()) { writer.writeSpace(); writer.write("{}"); return }
+        if (values.isEmpty()) {
+            writer.writeSpace()
+            writer.write("{}")
+            return
+        }
         values.forEach { (name, value) ->
             writer.writeNewline()
             writer.writeIndent(indent + 1)
             val qk = quoteKey(name)
             when (value) {
                 is EncodedElement.Primitive -> writer.writeKeyValue(qk, value.value)
-                is EncodedElement.NestedArray -> writeNestedArrayField(qk, value.elements, indent + 1)
-                is EncodedElement.Structure -> { writer.writeKey(qk); writeNestedStructure(value.values, indent + 1) }
+                is EncodedElement.NestedArray ->
+                    writeNestedArrayField(qk, value.elements, indent + 1)
+                is EncodedElement.Structure -> {
+                    writer.writeKey(qk)
+                    writeNestedStructure(value.values, indent + 1)
+                }
             }
         }
     }
@@ -184,7 +261,8 @@ internal class ToonArrayEncoder(
             }
             ArrayFormatSelector.ArrayFormat.TABULAR -> {
                 val first = elements.first() as EncodedElement.Structure
-                val fields = ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
+                val fields =
+                    ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
                 writer.write("[${elements.size}")
                 if (config.delimiter.char != ',') writer.write(config.delimiter.char.toString())
                 writer.write("]{${fields.joinToString(config.delimiter.char.toString())}}:")
@@ -219,7 +297,8 @@ internal class ToonArrayEncoder(
             }
             ArrayFormatSelector.ArrayFormat.TABULAR -> {
                 val first = elements.first() as EncodedElement.Structure
-                val fields = ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
+                val fields =
+                    ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
                 writer.writeTabularArrayHeader(key, elements.size, fields, config.delimiter.char)
                 elements.filterIsInstance<EncodedElement.Structure>().forEach { s ->
                     writer.writeNewline()
@@ -237,15 +316,22 @@ internal class ToonArrayEncoder(
         }
     }
 
-    private fun selectNestedFormat(elements: List<EncodedElement>): ArrayFormatSelector.ArrayFormat {
-        if (elements.all { it is EncodedElement.Primitive }) return ArrayFormatSelector.ArrayFormat.INLINE
+    private fun selectNestedFormat(
+        elements: List<EncodedElement>
+    ): ArrayFormatSelector.ArrayFormat {
+        if (elements.all { it is EncodedElement.Primitive })
+            return ArrayFormatSelector.ArrayFormat.INLINE
         if (elements.all { it is EncodedElement.Structure }) {
             val structures = elements.filterIsInstance<EncodedElement.Structure>()
             if (structures.isNotEmpty()) {
                 val first = structures.first()
-                val allSame = structures.all { it.descriptor == first.descriptor }
-                        && ArrayFormatSelector.allPropertiesArePrimitive(first.descriptor)
-                        && structures.all { it.values.map { p -> p.first }.toSet() == first.values.map { p -> p.first }.toSet() }
+                val allSame =
+                    structures.all { it.descriptor == first.descriptor } &&
+                        ArrayFormatSelector.allPropertiesArePrimitive(first.descriptor) &&
+                        structures.all {
+                            it.values.map { p -> p.first }.toSet() ==
+                                first.values.map { p -> p.first }.toSet()
+                        }
                 if (allSame) return ArrayFormatSelector.ArrayFormat.TABULAR
             }
         }
@@ -267,36 +353,89 @@ private class ElementCapturer(
     private var isArray = descriptor.kind == StructureKind.LIST
 
     private fun add(value: ToonArrayEncoder.EncodedElement) {
-        val name = when {
-            isArray -> currentIndex.toString()
-            currentIndex in 0 until descriptor.elementsCount -> descriptor.getElementName(currentIndex)
-            else -> "field$currentIndex"
-        }
+        val name =
+            when {
+                isArray -> currentIndex.toString()
+                currentIndex in 0 until descriptor.elementsCount ->
+                    descriptor.getElementName(currentIndex)
+                else -> "field$currentIndex"
+            }
         values.add(name to value)
     }
 
-    private fun quote(value: String) = StringQuoting.quote(value, StringQuoting.QuotingContext.ARRAY_ELEMENT, config.delimiter.char)
+    private fun quote(value: String) =
+        StringQuoting.quote(
+            value,
+            StringQuoting.QuotingContext.ARRAY_ELEMENT,
+            config.delimiter.char,
+        )
 
     override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int) = false
-    override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean { currentIndex = index; return true }
 
-    override fun encodeNull() { add(ToonArrayEncoder.EncodedElement.Primitive("null")) }
-    override fun encodeBoolean(value: Boolean) { add(ToonArrayEncoder.EncodedElement.Primitive(if (value) "true" else "false")) }
-    override fun encodeByte(value: Byte) { add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value))) }
-    override fun encodeShort(value: Short) { add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value))) }
-    override fun encodeInt(value: Int) { add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value))) }
-    override fun encodeLong(value: Long) { add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value))) }
-    override fun encodeFloat(value: Float) { add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value))) }
-    override fun encodeDouble(value: Double) { add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value))) }
-    override fun encodeChar(value: Char) { add(ToonArrayEncoder.EncodedElement.Primitive(quote(value.toString()))) }
-    override fun encodeString(value: String) { add(ToonArrayEncoder.EncodedElement.Primitive(quote(value))) }
-    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) { add(ToonArrayEncoder.EncodedElement.Primitive(quote(enumDescriptor.getElementName(index)))) }
-
-    override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder = when (descriptor.kind) {
-        StructureKind.LIST -> ElementCapturer(config, serializersModule, descriptor) { add(ToonArrayEncoder.EncodedElement.NestedArray(it.map { (_, v) -> v })) }
-        StructureKind.CLASS, StructureKind.OBJECT -> ElementCapturer(config, serializersModule, descriptor) { add(ToonArrayEncoder.EncodedElement.Structure(descriptor, it)) }
-        else -> this
+    override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
+        currentIndex = index
+        return true
     }
 
-    override fun endStructure(descriptor: SerialDescriptor) { onComplete(values) }
+    override fun encodeNull() {
+        add(ToonArrayEncoder.EncodedElement.Primitive("null"))
+    }
+
+    override fun encodeBoolean(value: Boolean) {
+        add(ToonArrayEncoder.EncodedElement.Primitive(if (value) "true" else "false"))
+    }
+
+    override fun encodeByte(value: Byte) {
+        add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
+    }
+
+    override fun encodeShort(value: Short) {
+        add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
+    }
+
+    override fun encodeInt(value: Int) {
+        add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
+    }
+
+    override fun encodeLong(value: Long) {
+        add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
+    }
+
+    override fun encodeFloat(value: Float) {
+        add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
+    }
+
+    override fun encodeDouble(value: Double) {
+        add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
+    }
+
+    override fun encodeChar(value: Char) {
+        add(ToonArrayEncoder.EncodedElement.Primitive(quote(value.toString())))
+    }
+
+    override fun encodeString(value: String) {
+        add(ToonArrayEncoder.EncodedElement.Primitive(quote(value)))
+    }
+
+    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
+        add(ToonArrayEncoder.EncodedElement.Primitive(quote(enumDescriptor.getElementName(index))))
+    }
+
+    override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder =
+        when (descriptor.kind) {
+            StructureKind.LIST ->
+                ElementCapturer(config, serializersModule, descriptor) {
+                    add(ToonArrayEncoder.EncodedElement.NestedArray(it.map { (_, v) -> v }))
+                }
+            StructureKind.CLASS,
+            StructureKind.OBJECT ->
+                ElementCapturer(config, serializersModule, descriptor) {
+                    add(ToonArrayEncoder.EncodedElement.Structure(descriptor, it))
+                }
+            else -> this
+        }
+
+    override fun endStructure(descriptor: SerialDescriptor) {
+        onComplete(values)
+    }
 }
