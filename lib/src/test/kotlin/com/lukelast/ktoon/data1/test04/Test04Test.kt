@@ -4,7 +4,7 @@ import com.lukelast.ktoon.data1.doTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
-class Test02Test {
+class Test04Test {
     @Test fun test() = doTest(this, employees)
 }
 

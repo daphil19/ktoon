@@ -1,0 +1,37 @@
+owner: Luke
+location: Dream Garage
+capacity: 5
+inventory[2]:
+  - vin: PORS911GT3
+    make: Porsche
+    model: 911 GT3
+    year: 2024
+    isStreetLegal: true
+    engineSpec:
+      type: Flat-6
+      displacement: 4
+      horsepower: 502
+      torque: 346
+    features[3]: PCCB,Cage,Wing
+    lapTimes[5]{track,seconds}:
+      Nurburgring,415.5
+      Laguna Seca,90.2
+      Silverstone,112.7
+      Spa-Francorchamps,147.1
+      Monza,110.3
+    modifications[2]{name,cost,dateInstalled}:
+      Exhaust,5000,2024-01-10
+      Decals,null,2024-01-15
+  - vin: FERR296GTB
+    make: Ferrari
+    model: 296 GTB
+    year: 2023
+    isStreetLegal: true
+    engineSpec:
+      type: V6 Hybrid
+      displacement: 3
+      horsepower: 819
+      torque: 546
+    features[2]: Hybrid,Active Aero
+    lapTimes[0]:
+    modifications[0]:

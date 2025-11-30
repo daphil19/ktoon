@@ -48,7 +48,7 @@ internal class ToonArrayEncoder(
 
         data class Structure(
             val descriptor: SerialDescriptor,
-            val values: List<Pair<String, String>>,
+            val values: List<Pair<String, EncodedElement>>,
         ) : EncodedElement()
 
         data class NestedArray(val elements: List<EncodedElement>) : EncodedElement()
@@ -203,15 +203,7 @@ internal class ToonArrayEncoder(
         val allPrimitive = elements.all { it is EncodedElement.Primitive }
 
         if (allPrimitive) {
-            // Estimate inline length
-            val totalLength =
-                elements.sumOf { (it as EncodedElement.Primitive).value.length } +
-                    (elements.size - 1) // delimiters
-            return if (totalLength <= 80) {
-                ArrayFormatSelector.ArrayFormat.INLINE
-            } else {
-                ArrayFormatSelector.ArrayFormat.EXPANDED
-            }
+            return ArrayFormatSelector.ArrayFormat.INLINE
         }
 
         // Check if all elements are structures with same descriptor and all primitive fields
@@ -223,7 +215,15 @@ internal class ToonArrayEncoder(
             val allPrimitiveFields = ArrayFormatSelector.allPropertiesArePrimitive(firstDescriptor)
 
             if (allSameDescriptor && allPrimitiveFields) {
-                return ArrayFormatSelector.ArrayFormat.TABULAR
+                // Ensure all structures have the same keys (required for tabular format)
+                val firstKeys = structures.first().values.map { it.first }.toSet()
+                val allSameKeys = structures.all { structure ->
+                    structure.values.map { it.first }.toSet() == firstKeys
+                }
+
+                if (allSameKeys) {
+                    return ArrayFormatSelector.ArrayFormat.TABULAR
+                }
             }
         }
 
@@ -244,7 +244,10 @@ internal class ToonArrayEncoder(
             }
             writer.writeString("]:")
         }
-        writer.writeSpace()
+        
+        if (elements.isNotEmpty()) {
+            writer.writeSpace()
+        }
 
         elements.forEachIndexed { index, element ->
             if (element is EncodedElement.Primitive) {
@@ -269,10 +272,15 @@ internal class ToonArrayEncoder(
 
         // Get field names
         val fieldNames = ArrayFormatSelector.getFieldNames(structure.descriptor)
+        
+        // Quote field names
+        val quotedFieldNames = fieldNames.map {
+            StringQuoting.quote(it, StringQuoting.QuotingContext.OBJECT_KEY, config.delimiter.char)
+        }
 
         // Write header: [N]{field1,field2}: or key[N]{field1,field2}:
         if (key != null) {
-            writer.writeTabularArrayHeader(key, elements.size, fieldNames, config.delimiter.char)
+            writer.writeTabularArrayHeader(key, elements.size, quotedFieldNames, config.delimiter.char)
         } else {
             // Root-level array - no key prefix
             writer.writeString("[")
@@ -281,7 +289,7 @@ internal class ToonArrayEncoder(
                 writer.writeString(config.delimiter.char.toString())
             }
             writer.writeString("]{")
-            writer.writeString(fieldNames.joinToString(config.delimiter.char.toString()))
+            writer.writeString(quotedFieldNames.joinToString(config.delimiter.char.toString()))
             writer.writeString("}:")
         }
 
@@ -292,7 +300,12 @@ internal class ToonArrayEncoder(
                 writer.writeIndent(indentLevel + 1)
 
                 element.values.forEachIndexed { index, (_, value) ->
-                    writer.writeString(value)
+                    if (value is EncodedElement.Primitive) {
+                        writer.writeString(value.value)
+                    } else {
+                        // Fallback for non-primitive in tabular (shouldn't happen if selectArrayFormat works)
+                        writer.writeString(value.toString())
+                    }
                     if (index < element.values.size - 1) {
                         writer.writeDelimiter()
                     }
@@ -326,9 +339,42 @@ internal class ToonArrayEncoder(
                     writer.writeString(element.value)
                 }
                 is EncodedElement.Structure -> {
-                    // For structures in expanded format, write as nested object
-                    // This is simplified - full implementation would use ToonObjectEncoder
-                    writer.writeString("{...}")
+                    // Write object fields
+                    element.values.forEachIndexed { index, (fieldName, value) ->
+                        val quotedKey = StringQuoting.quote(
+                            fieldName,
+                            StringQuoting.QuotingContext.OBJECT_KEY,
+                            config.delimiter.char
+                        )
+                        
+                        if (index == 0) {
+                            // First field: write on same line as dash
+                        } else {
+                            // Subsequent fields: new line, indent + 2
+                            writer.writeNewline()
+                            writer.writeIndent(indentLevel + 2)
+                        }
+
+                        when (value) {
+                            is EncodedElement.Primitive -> {
+                                writer.writeKeyValue(quotedKey, value.value)
+                            }
+                            is EncodedElement.NestedArray -> {
+                                // Recursive write for nested array as field value
+                                val format = selectArrayFormat(value.elements)
+                                when (format) {
+                                    ArrayFormatSelector.ArrayFormat.INLINE -> writeInlineArray(value.elements, quotedKey)
+                                    ArrayFormatSelector.ArrayFormat.TABULAR -> writeTabularArray(value.elements, quotedKey, indentLevel + 2)
+                                    ArrayFormatSelector.ArrayFormat.EXPANDED -> writeExpandedArray(value.elements, quotedKey, indentLevel + 2)
+                                }
+                            }
+                            is EncodedElement.Structure -> {
+                                // Nested object as field value
+                                writer.writeKey(quotedKey)
+                                writeStructure(value.values, indentLevel + 2)
+                            }
+                        }
+                    }
                 }
                 is EncodedElement.NestedArray -> {
                     // Recursive write for nested array
@@ -342,6 +388,43 @@ internal class ToonArrayEncoder(
             }
         }
     }
+
+    private fun writeStructure(values: List<Pair<String, EncodedElement>>, indentLevel: Int) {
+        if (values.isEmpty()) {
+            writer.writeSpace()
+            writer.writeString("{}")
+            return
+        }
+
+        values.forEach { (fieldName, value) ->
+            writer.writeNewline()
+            writer.writeIndent(indentLevel + 1)
+            
+            val quotedKey = StringQuoting.quote(
+                fieldName,
+                StringQuoting.QuotingContext.OBJECT_KEY,
+                config.delimiter.char
+            )
+
+            when (value) {
+                is EncodedElement.Primitive -> {
+                    writer.writeKeyValue(quotedKey, value.value)
+                }
+                is EncodedElement.NestedArray -> {
+                    val format = selectArrayFormat(value.elements)
+                    when (format) {
+                        ArrayFormatSelector.ArrayFormat.INLINE -> writeInlineArray(value.elements, quotedKey)
+                        ArrayFormatSelector.ArrayFormat.TABULAR -> writeTabularArray(value.elements, quotedKey, indentLevel + 1)
+                        ArrayFormatSelector.ArrayFormat.EXPANDED -> writeExpandedArray(value.elements, quotedKey, indentLevel + 1)
+                    }
+                }
+                is EncodedElement.Structure -> {
+                    writer.writeKey(quotedKey)
+                    writeStructure(value.values, indentLevel + 1)
+                }
+            }
+        }
+    }
 }
 
 /** Helper encoder for capturing tabular array element field values. */
@@ -350,11 +433,15 @@ private class TabularElementEncoder(
     private val config: ToonConfiguration,
     override val serializersModule: SerializersModule,
     private val descriptor: SerialDescriptor,
-    private val onComplete: (List<Pair<String, String>>) -> Unit,
+    private val onComplete: (List<Pair<String, ToonArrayEncoder.EncodedElement>>) -> Unit,
 ) : AbstractEncoder() {
 
-    private val fieldValues = mutableListOf<Pair<String, String>>()
+    private val fieldValues = mutableListOf<Pair<String, ToonArrayEncoder.EncodedElement>>()
     private var currentIndex = -1
+
+    override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int): Boolean {
+        return false
+    }
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
         currentIndex = index
@@ -363,35 +450,35 @@ private class TabularElementEncoder(
     }
 
     override fun encodeNull() {
-        addField("null")
+        addField(ToonArrayEncoder.EncodedElement.Primitive("null"))
     }
 
     override fun encodeBoolean(value: Boolean) {
-        addField(if (value) "true" else "false")
+        addField(ToonArrayEncoder.EncodedElement.Primitive(if (value) "true" else "false"))
     }
 
     override fun encodeByte(value: Byte) {
-        addField(NumberNormalizer.normalize(value))
+        addField(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
     }
 
     override fun encodeShort(value: Short) {
-        addField(NumberNormalizer.normalize(value))
+        addField(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
     }
 
     override fun encodeInt(value: Int) {
-        addField(NumberNormalizer.normalize(value))
+        addField(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
     }
 
     override fun encodeLong(value: Long) {
-        addField(NumberNormalizer.normalize(value))
+        addField(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
     }
 
     override fun encodeFloat(value: Float) {
-        addField(NumberNormalizer.normalize(value))
+        addField(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
     }
 
     override fun encodeDouble(value: Double) {
-        addField(NumberNormalizer.normalize(value))
+        addField(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
     }
 
     override fun encodeChar(value: Char) {
@@ -401,7 +488,7 @@ private class TabularElementEncoder(
                 StringQuoting.QuotingContext.ARRAY_ELEMENT,
                 config.delimiter.char,
             )
-        addField(quoted)
+        addField(ToonArrayEncoder.EncodedElement.Primitive(quoted))
     }
 
     override fun encodeString(value: String) {
@@ -411,7 +498,7 @@ private class TabularElementEncoder(
                 StringQuoting.QuotingContext.ARRAY_ELEMENT,
                 config.delimiter.char,
             )
-        addField(quoted)
+        addField(ToonArrayEncoder.EncodedElement.Primitive(quoted))
     }
 
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
@@ -422,10 +509,10 @@ private class TabularElementEncoder(
                 StringQuoting.QuotingContext.ARRAY_ELEMENT,
                 config.delimiter.char,
             )
-        addField(quoted)
+        addField(ToonArrayEncoder.EncodedElement.Primitive(quoted))
     }
 
-    private fun addField(value: String) {
+    private fun addField(value: ToonArrayEncoder.EncodedElement) {
         val fieldName =
             if (currentIndex in 0 until descriptor.elementsCount) {
                 descriptor.getElementName(currentIndex)
@@ -434,6 +521,33 @@ private class TabularElementEncoder(
                 "field$currentIndex"
             }
         fieldValues.add(fieldName to value)
+    }
+
+    override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
+        return when (descriptor.kind) {
+            StructureKind.LIST -> {
+                NestedArrayCapturer(
+                    config = config,
+                    serializersModule = serializersModule,
+                    descriptor = descriptor,
+                    onComplete = { nestedElements ->
+                        addField(ToonArrayEncoder.EncodedElement.NestedArray(nestedElements))
+                    },
+                )
+            }
+            StructureKind.CLASS,
+            StructureKind.OBJECT -> {
+                TabularElementEncoder(
+                    config = config,
+                    serializersModule = serializersModule,
+                    descriptor = descriptor,
+                    onComplete = { values ->
+                        addField(ToonArrayEncoder.EncodedElement.Structure(descriptor, values))
+                    },
+                )
+            }
+            else -> this
+        }
     }
 
     override fun endStructure(descriptor: SerialDescriptor) {

@@ -47,6 +47,11 @@ internal class ToonObjectEncoder(
     private var elementIndex = 0
     private var currentKey: String? = null
 
+    /** Skips default values to keep output concise and support non-uniform array detection. */
+    override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int): Boolean {
+        return false
+    }
+
     /** Encodes the element index (field position) and stores the key name. */
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
         elementIndex = index

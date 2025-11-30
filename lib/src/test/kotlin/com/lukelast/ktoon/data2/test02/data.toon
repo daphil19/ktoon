@@ -1,0 +1,56 @@
+owner: Luke
+location: Jay's Warehouse
+capacity: 20
+inventory[3]:
+  - vin: MCL765LT001
+    make: McLaren
+    model: 765LT
+    year: 2021
+    isStreetLegal: true
+    engineSpec:
+      type: V8 Twin-Turbo
+      displacement: 4
+      horsepower: 755
+      torque: 590
+    features[4]: Carbon Tub,Active Aero,Titanium Exhaust,Roof Scoop
+    lapTimes[4]{track,seconds}:
+      Silverstone,105.4
+      Spa Francorchamps,143.2
+      Monza,109.8
+      Nurburgring,415
+    modifications[2]{name,cost,dateInstalled}:
+      Slicks,4500,2021-06-01
+      Telemetry Kit,1200,2021-06-05
+  - vin: LAMBOSTO123
+    make: Lamborghini
+    model: Huracan STO
+    year: 2022
+    isStreetLegal: true
+    engineSpec:
+      type: V10 NA
+      displacement: 5.2
+      horsepower: 630
+      torque: 417
+    features[3]: RWD,CCMR Brakes,Cofango
+    lapTimes[1]{track,seconds}:
+      Daytona,112.5
+    modifications[3]{name,cost,dateInstalled}:
+      Full PPF,6000,2022-02-01
+      Warranty Work,null,2022-08-15
+      Titanium Bolts,800,2022-09-20
+  - vin: DODGEACR999
+    make: Dodge
+    model: Viper ACR
+    year: 2017
+    isStreetLegal: true
+    engineSpec:
+      type: V10 NA
+      displacement: 8.4
+      horsepower: 645
+      torque: 600
+    features[8]: Manual,Extreme Aero,Adjustable Suspension,Kumho Tires,No Radio,No Sound Deadening,Lightweight Battery,Track Cooling Package
+    lapTimes[3]{track,seconds}:
+      Laguna Seca,88.6
+      Road Atlanta,86.3
+      VIR,158.4
+    modifications[0]:
