@@ -86,7 +86,8 @@ data class FixtureOptions(
             delimiter = delimiter.toDelimiter(),
             indentSize = indent,
             strictMode = strict,
-            keyFolding = keyFolding == "safe",
+            keyFolding = if (keyFolding == "safe") com.lukelast.ktoon.KeyFoldingMode.SAFE else com.lukelast.ktoon.KeyFoldingMode.OFF,
+            flattenDepth = flattenDepth,
             pathExpansion = expandPaths == "safe",
         )
     }

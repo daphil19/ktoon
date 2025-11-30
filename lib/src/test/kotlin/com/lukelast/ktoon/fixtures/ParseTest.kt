@@ -1,5 +1,6 @@
 package com.lukelast.ktoon.fixtures
 
+import com.lukelast.ktoon.KeyFoldingMode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import kotlinx.serialization.json.JsonPrimitive
@@ -38,6 +39,7 @@ class ParseTest {
             indent = 4,
             strict = false,
             keyFolding = "safe",
+            flattenDepth = 6,
             expandPaths = "safe"
         )
 
@@ -46,7 +48,8 @@ class ParseTest {
         assertEquals(com.lukelast.ktoon.ToonConfiguration.Delimiter.TAB, config.delimiter)
         assertEquals(4, config.indentSize)
         assertEquals(false, config.strictMode)
-        assertEquals(true, config.keyFolding)
+        assertEquals(KeyFoldingMode.SAFE, config.keyFolding)
+        assertEquals(6, config.flattenDepth)
         assertEquals(true, config.pathExpansion)
     }
 

@@ -25,7 +25,7 @@ object Demo {
 
         val ktoon = Ktoon {
             strictMode = true
-            keyFolding = false
+            keyFolding = KeyFoldingMode.OFF
             delimiter = ToonConfiguration.Delimiter.PIPE
             indentSize = 2
         }

@@ -4,8 +4,8 @@ package com.lukelast.ktoon
  * Configuration for TOON format encoding and decoding.
  *
  * @property strictMode Enable strict validation of TOON format rules (default: true)
- * @property keyFolding Enable collapsing nested single-key objects into dotted notation (default:
- *   false)
+ * @property keyFolding Enable collapsing nested single-key objects into dotted notation (default: OFF)
+ * @property flattenDepth Maximum depth for key folding (default: null, meaning Infinity)
  * @property pathExpansion Enable expanding dotted keys into nested structures when decoding
  *   (default: false)
  * @property delimiter Delimiter character for array values and tabular format (default: COMMA)
@@ -13,7 +13,8 @@ package com.lukelast.ktoon
  */
 data class ToonConfiguration(
     val strictMode: Boolean = true,
-    val keyFolding: Boolean = false,
+    val keyFolding: KeyFoldingMode = KeyFoldingMode.OFF,
+    val flattenDepth: Int? = null,
     val pathExpansion: Boolean = false,
     val delimiter: Delimiter = Delimiter.COMMA,
     val indentSize: Int = 2,
@@ -21,6 +22,9 @@ data class ToonConfiguration(
     init {
         require(indentSize > 0) { "indentSize must be positive, got $indentSize" }
         require(indentSize <= 16) { "indentSize must be <= 16, got $indentSize" }
+        if (flattenDepth != null) {
+            require(flattenDepth >= 0) { "flattenDepth must be non-negative, got $flattenDepth" }
+        }
     }
 
     /** Delimiter character for separating values in inline arrays and tabular format. */
@@ -45,8 +49,16 @@ data class ToonConfiguration(
          * Compact configuration optimized for minimal output size. Enables key folding for more
          * compact representation.
          */
-        val Compact = ToonConfiguration(keyFolding = true)
+        val Compact = ToonConfiguration(keyFolding = KeyFoldingMode.SAFE)
     }
+}
+
+/** Modes for key folding. */
+enum class KeyFoldingMode {
+    /** No folding is performed. */
+    OFF,
+    /** Fold eligible chains according to safe rules. */
+    SAFE
 }
 
 /**
@@ -56,7 +68,7 @@ data class ToonConfiguration(
  * ```
  * val config = ToonConfiguration {
  *     strictMode = false
- *     keyFolding = true
+ *     keyFolding = KeyFoldingMode.SAFE
  *     indentSize = 4
  * }
  * ```
@@ -70,7 +82,8 @@ inline fun ToonConfiguration(
 /** Builder class for constructing ToonConfiguration instances. */
 class ToonConfigurationBuilder {
     var strictMode: Boolean = true
-    var keyFolding: Boolean = false
+    var keyFolding: KeyFoldingMode = KeyFoldingMode.OFF
+    var flattenDepth: Int? = null
     var pathExpansion: Boolean = false
     var delimiter: ToonConfiguration.Delimiter = ToonConfiguration.Delimiter.COMMA
     var indentSize: Int = 2
@@ -79,6 +92,7 @@ class ToonConfigurationBuilder {
         ToonConfiguration(
             strictMode = strictMode,
             keyFolding = keyFolding,
+            flattenDepth = flattenDepth,
             pathExpansion = pathExpansion,
             delimiter = delimiter,
             indentSize = indentSize,
