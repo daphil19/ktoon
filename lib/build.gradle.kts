@@ -33,13 +33,17 @@ dependencies {
     testRuntimeOnly(libs.junit.platform)
     testRuntimeOnly(libs.slf4j.simple)
     testImplementation(libs.instancio.junit)
+    // Comparison libraries
     testImplementation(libs.jtoon)
+    testImplementation(libs.kotlinToon)
 
     // Benchmark dependencies
-    "benchImplementation"(libs.jtoon)
-    "benchImplementation"(libs.instancio.junit)
-    "benchImplementation"(libs.kotlin.serialization)
     "benchImplementation"(libs.kotlinx.benchmark.runtime)
+    "benchImplementation"(libs.kotlin.serialization)
+    "benchImplementation"(libs.instancio.junit)
+    // Comparison libraries
+    "benchImplementation"(libs.jtoon)
+    "benchImplementation"(libs.kotlinToon)
 }
 
 tasks.test { useJUnitPlatform() }

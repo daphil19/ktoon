@@ -1,5 +1,6 @@
 package com.lukelast.ktoon
 
+import br.com.vexpera.ktoon.Toon
 import dev.toonformat.jtoon.JToon
 import kotlinx.benchmark.*
 import kotlinx.serialization.Serializable
@@ -39,6 +40,11 @@ open class KtoonBenchmark {
     @Measurement(iterations = 3, time = 5, timeUnit = BenchmarkTimeUnit.SECONDS)
     fun benchmarkJtoon(): String {
         return JToon.encode(data)
+    }
+
+    @Benchmark
+    fun benchmarkToonKotlin(): String{
+        return Toon.encode(data)
     }
 }
 
