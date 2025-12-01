@@ -71,6 +71,10 @@ internal class ToonPrimitiveDecoder(
         return null
     }
 
+    override fun decodeNotNullMark(): Boolean {
+        return value != ToonValue.Null
+    }
+
     override fun decodeBoolean(): Boolean {
         return when (value) {
             is ToonValue.Boolean -> value.value

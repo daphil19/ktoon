@@ -266,8 +266,16 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
 
     /** Parses a primitive value from a string. */
     private fun parsePrimitive(content: String, line: Int): ToonValue {
+        // Check if value is quoted (§7.4 - quoting disambiguates type)
+        val isQuoted = content.startsWith('"')
+
         // Unquote if quoted
         val unquoted = StringQuoting.unquote(content, line)
+
+        // If originally quoted, return as string (prevents parsing "42" as number, etc.)
+        if (isQuoted) {
+            return ToonValue.String(unquoted)
+        }
 
         // Check for null
         if (unquoted == "null") {
@@ -282,6 +290,11 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
             return ToonValue.Boolean(false)
         }
 
+        // Check for forbidden leading zeros (§4 - must be treated as string)
+        if (hasLeadingZero(unquoted)) {
+            return ToonValue.String(unquoted)
+        }
+
         // Try to parse as number
         val numberValue = tryParseNumber(unquoted)
         if (numberValue != null) {
@@ -292,9 +305,18 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         return ToonValue.String(unquoted)
     }
 
+    /** Checks if a string has a forbidden leading zero (§4). */
+    private fun hasLeadingZero(str: String): Boolean {
+        if (str.isEmpty() || str.length == 1) return false
+        if (str[0] != '0') return false
+        // "0.5" or "0e6" are valid, but "05" is not
+        val secondChar = str[1]
+        return secondChar in '0'..'9' // Leading zero followed by digit
+    }
+
     /** Tries to parse a string as a number. Returns null if not a valid number. */
     private fun tryParseNumber(str: String): ToonValue? {
-        // Try integer first
+        // Try integer first (for simple cases without exponents)
         val intValue = str.toIntOrNull()
         if (intValue != null) {
             return ToonValue.Number(intValue)
@@ -306,9 +328,20 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
             return ToonValue.Number(longValue)
         }
 
-        // Try double
+        // Try double (handles scientific notation)
         val doubleValue = str.toDoubleOrNull()
         if (doubleValue != null) {
+            // If the double has no fractional part and fits in Int/Long, store as integer
+            if (doubleValue.isFinite() && doubleValue == Math.floor(doubleValue)) {
+                // Check if it fits in Int
+                if (doubleValue >= Int.MIN_VALUE && doubleValue <= Int.MAX_VALUE) {
+                    return ToonValue.Number(doubleValue.toInt())
+                }
+                // Check if it fits in Long
+                if (doubleValue >= Long.MIN_VALUE && doubleValue <= Long.MAX_VALUE) {
+                    return ToonValue.Number(doubleValue.toLong())
+                }
+            }
             return ToonValue.Number(doubleValue)
         }
 
