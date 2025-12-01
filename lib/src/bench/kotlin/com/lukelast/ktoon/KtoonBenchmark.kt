@@ -42,6 +42,8 @@ open class KtoonBenchmark {
     }
 
     @Benchmark
+    //    @org.openjdk.jmh.annotations.Fork(value = 1, jvmArgsAppend =
+    // ["-XX:StartFlightRecording=filename=benchmark.jfr,settings=profile,dumponexit=true,jdk.ExecutionSample#period=2ms"])
     fun benchmarkKtoon(): String {
         return ktoon.encodeToString(data)
     }

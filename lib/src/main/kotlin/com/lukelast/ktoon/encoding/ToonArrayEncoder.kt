@@ -18,16 +18,18 @@ internal class ToonArrayEncoder(
     private val key: String?,
 ) : AbstractEncoder() {
 
-    private val elements = mutableListOf<EncodedElement>()
+    private val elements = ArrayList<EncodedElement>(64)
     private var elementDescriptor: SerialDescriptor? = null
 
     sealed class EncodedElement {
-        data class Primitive(val value: String) : EncodedElement()
+        class Primitive(val value: String) : EncodedElement()
 
         data class Structure(
             val descriptor: SerialDescriptor,
             val values: List<Pair<String, EncodedElement>>,
-        ) : EncodedElement()
+        ) : EncodedElement() {
+            val fieldNames = values.map(Pair<String, EncodedElement>::first)
+        }
 
         data class NestedArray(val elements: List<EncodedElement>) : EncodedElement()
     }
@@ -257,11 +259,10 @@ private class ElementCapturer(
 
     private fun add(value: ToonArrayEncoder.EncodedElement) {
         val name =
-            when {
-                isArray -> currentIndex.toString()
-                currentIndex in 0 until descriptor.elementsCount ->
-                    descriptor.getElementName(currentIndex)
-                else -> "field$currentIndex"
+            if (isArray) {
+                currentIndex.toString()
+            } else {
+                descriptor.getElementName(currentIndex)
             }
         values.add(name to value)
     }

@@ -38,12 +38,7 @@ internal object ArrayFormatSelector {
         if (first.descriptor.elementDescriptors.any { it.kind !is PrimitiveKind }) {
             return EXPANDED
         }
-        val firstFieldNames = first.values.map(Pair<String, EncodedElement>::first).toSet()
-        if (
-            structures.any {
-                it.values.map(Pair<String, EncodedElement>::first).toSet() != firstFieldNames
-            }
-        ) {
+        if (structures.any { it.fieldNames != first.fieldNames }) {
             return EXPANDED
         }
         return TABULAR
