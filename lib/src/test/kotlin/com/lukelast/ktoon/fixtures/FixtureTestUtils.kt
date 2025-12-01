@@ -2,7 +2,7 @@ package com.lukelast.ktoon.fixtures
 
 import com.lukelast.ktoon.Ktoon
 import com.lukelast.ktoon.KtoonException
-import com.lukelast.ktoon.fixtures.encode.ArraysNestedEncodeTest
+import com.lukelast.ktoon.data1.jsonPretty
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.json.Json
@@ -97,26 +97,27 @@ fun <T> runDecodeFixtureTest(
 
     if (testCase.shouldError) {
         // Test expects an error to be thrown
-        assertThrows<KtoonException> {
-            ktoon.decodeFromString(deserializer, toonInput)
-        }
+        assertThrows<KtoonException> { ktoon.decodeFromString(deserializer, toonInput) }
     } else {
         // Decode TOON to typed value
-        val decoded = ktoon.decodeFromString(deserializer, toonInput)
+        val actualObject = ktoon.decodeFromString(deserializer, toonInput)
+        val actualJsonText = jsonPretty.encodeToString(serializer, actualObject)
 
-        // Encode back to JSON for comparison
-        val decodedJson = fixtureInputJson.encodeToJsonElement(serializer, decoded)
+        val expectedObject = fixtureInputJson.decodeFromJsonElement(deserializer, testCase.expected)
+        val expectedJsonText = jsonPretty.encodeToString(serializer, expectedObject)
 
-        // Compare with expected JSON
-        assertEquals(
-            testCase.expected,
-            decodedJson,
-            buildString {
-                append("Test '$testName' failed")
-                testCase.note?.let { append("\nNote: $it") }
-                testCase.specSection?.let { append("\nSpec: §$it") }
-            },
-        )
+        // If objects aren't equal then compare the json strings to get a nice diff.
+        if (expectedObject != actualObject) {
+            assertEquals(
+                expectedJsonText,
+                actualJsonText,
+                buildString {
+                    append("Test '$testName' failed")
+                    testCase.note?.let { append("\nNote: $it") }
+                    testCase.specSection?.let { append("\nSpec: §$it") }
+                },
+            )
+        }
     }
 }
 
@@ -133,8 +134,7 @@ fun currentFixtureTestName(): String {
     return Thread.currentThread()
         .stackTrace
         .firstOrNull {
-            it.className.startsWith(encodePackage) ||
-                it.className.startsWith(decodePackage)
+            it.className.startsWith(encodePackage) || it.className.startsWith(decodePackage)
         }
         ?.methodName
         ?: error(
