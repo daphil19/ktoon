@@ -77,7 +77,9 @@ class KtoonConfigurationBuilder {
     var keyFolding: KeyFoldingMode = KeyFoldingMode.OFF
 
     /** Enable [keyFolding] */
-    fun keyFoldingSafe() = keyFolding == KeyFoldingMode.SAFE
+    fun keyFoldingSafe() {
+        keyFolding = KeyFoldingMode.SAFE
+    }
 
     /**
      * Only used when [keyFolding] is on. Default is Infinity. This will set a limit to how many

@@ -2,16 +2,17 @@ package com.lukelast.ktoon.data1
 
 import com.lukelast.ktoon.KeyFoldingMode.SAFE
 import com.lukelast.ktoon.Ktoon
+import com.lukelast.ktoon.KtoonConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.isReadable
 import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
-import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
 
 abstract class Runner {
     @Test
@@ -45,9 +46,15 @@ abstract class Runner {
     fun execToonCli(json: Path, toon: Path) {
         val cmd = mutableListOf("cmd", "/c", "npx", "@toon-format/cli", json.name, "-o", toon.name)
 
+        // Currently the CLI doesn't actually support this.
         if (ktoon.configuration.keyFolding == SAFE) {
             cmd.add("--key-folding")
             cmd.add("safe")
+        }
+
+        if (ktoon.configuration.delimiter != KtoonConfiguration.Delimiter.COMMA) {
+            cmd.add("--delimiter")
+            cmd.add("\"${ktoon.configuration.delimiter.char}\"")
         }
 
         val process =

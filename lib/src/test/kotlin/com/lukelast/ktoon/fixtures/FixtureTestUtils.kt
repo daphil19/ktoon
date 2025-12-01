@@ -72,12 +72,14 @@ inline fun <reified T> runFixtureTest(
 }
 
 fun currentFixtureTestName(): String {
-    return Throwable().stackTrace.firstOrNull {
-        it.className.startsWith(fixtureTestPackagePrefix)
-    }?.methodName ?: error(
-        "Unable to determine fixture test name from stack trace; " +
-            "ensure calls originate from $fixtureTestPackagePrefix",
-    )
+    return Throwable()
+        .stackTrace
+        .firstOrNull { it.className.startsWith(fixtureTestPackagePrefix) }
+        ?.methodName
+        ?: error(
+            "Unable to determine fixture test name from stack trace; " +
+                "ensure calls originate from $fixtureTestPackagePrefix"
+        )
 }
 
 fun JsonElement.asString(): String {

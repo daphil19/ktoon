@@ -3,7 +3,7 @@ package com.lukelast.ktoon.data1.test04
 import com.lukelast.ktoon.data1.Runner
 import kotlinx.serialization.Serializable
 
-class Test04: Runner() {
+class Test04 : Runner() {
     override fun run() = doTest(employees)
 }
 

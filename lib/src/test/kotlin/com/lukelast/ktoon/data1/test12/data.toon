@@ -1,3 +1,2 @@
-field1:
-  field2:
-    field3: value
+blah: foo
+one.two.three: 123
