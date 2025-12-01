@@ -13,7 +13,7 @@ class WhitespaceEncodeTest {
     fun `produces no trailing newline at end of output`() {
         @Serializable data class Id(val id: Int)
 
-        runFixtureTest<Id>(fixture, "produces no trailing newline at end of output")
+        runFixtureTest<Id>(fixture)
     }
 
     @Test
@@ -22,7 +22,7 @@ class WhitespaceEncodeTest {
 
         @Serializable data class Root(val user: User, val items: List<String>)
 
-        runFixtureTest<Root>(fixture, "maintains proper indentation for nested structures")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -31,6 +31,6 @@ class WhitespaceEncodeTest {
 
         @Serializable data class Root(val user: User)
 
-        runFixtureTest<Root>(fixture, "respects custom indent size option")
+        runFixtureTest<Root>(fixture)
     }
 }

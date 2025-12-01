@@ -1,0 +1,36 @@
+{
+  "owner": "Frank",
+  "location": "Driveway",
+  "capacity": 1,
+  "inventory": [
+    {
+      "vin": "PORS718GT4",
+      "make": "Porsche",
+      "model": "718 Cayman GT4",
+      "year": 2023,
+      "isStreetLegal": true,
+      "engineSpec": {
+        "type": "Flat-6 NA",
+        "displacement": 4.0,
+        "horsepower": 414,
+        "torque": 309
+      },
+      "features": [
+        "Bucket Seats"
+      ],
+      "lapTimes": [
+        {
+          "track": "Hockenheim",
+          "seconds": 108.5
+        }
+      ],
+      "modifications": [
+        {
+          "name": "Brake Pads",
+          "cost": 600.0,
+          "dateInstalled": "2023-05-20"
+        }
+      ]
+    }
+  ]
+}

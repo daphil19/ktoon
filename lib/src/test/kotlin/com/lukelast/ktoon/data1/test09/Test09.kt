@@ -1,8 +1,18 @@
-package com.lukelast.ktoon.data2.test04
+package com.lukelast.ktoon.data1.test09
 
-import com.lukelast.ktoon.data2.*
+import com.lukelast.ktoon.data1.EngineSpec
+import com.lukelast.ktoon.data1.Garage
+import com.lukelast.ktoon.data1.LapTime
+import com.lukelast.ktoon.data1.Modification
+import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.SportsCar
 
-val data =
+/** Special character and quoting tests. Tests quoted strings, delimiter handling, Unicode, null-like strings, and negative zero. */
+class Test09 : Runner() {
+    override fun run() = doTest(data)
+}
+
+private val data =
     Garage(
         // Tests: Quoted strings containing quotes and colons
         owner = "Mr. \"Robot\" : Admin",
@@ -32,7 +42,7 @@ val data =
                             type = "", // Tests: Empty string -> Must be quoted ""
                             displacement =
                                 0.000001, // Tests: Canonical decimal format (no Scientific
-                                          // notation)
+                            // notation)
                             horsepower = 0,
                             torque = -100, // Tests: Negative integer
                         ),

@@ -18,14 +18,14 @@ class ArraysPrimitiveEncodeTest {
     fun `encodes string arrays inline`() {
         @Serializable data class Tags(val tags: List<String>)
 
-        runFixtureTest<Tags>(fixture, "encodes string arrays inline")
+        runFixtureTest<Tags>(fixture)
     }
 
     @Test
     fun `encodes number arrays inline`() {
         @Serializable data class Nums(val nums: List<Int>)
 
-        runFixtureTest<Nums>(fixture, "encodes number arrays inline")
+        runFixtureTest<Nums>(fixture)
     }
 
     @Test
@@ -33,55 +33,55 @@ class ArraysPrimitiveEncodeTest {
     fun `encodes mixed primitive arrays inline`() {
         @Serializable data class Data(val data: List<JsonElement>)
 
-        runFixtureTest<Data>(fixture, "encodes mixed primitive arrays inline")
+        runFixtureTest<Data>(fixture)
     }
 
     @Test
     fun `encodes empty arrays`() {
         @Serializable data class Items(val items: List<String>)
 
-        runFixtureTest<Items>(fixture, "encodes empty arrays")
+        runFixtureTest<Items>(fixture)
     }
 
     @Test
     fun `encodes empty string in single-item array`() {
         @Serializable data class Items(val items: List<String>)
 
-        runFixtureTest<Items>(fixture, "encodes empty string in single-item array")
+        runFixtureTest<Items>(fixture)
     }
 
     @Test
     fun `encodes empty string in multi-item array`() {
         @Serializable data class Items(val items: List<String>)
 
-        runFixtureTest<Items>(fixture, "encodes empty string in multi-item array")
+        runFixtureTest<Items>(fixture)
     }
 
     @Test
     fun `encodes whitespace-only strings in arrays`() {
         @Serializable data class Items(val items: List<String>)
 
-        runFixtureTest<Items>(fixture, "encodes whitespace-only strings in arrays")
+        runFixtureTest<Items>(fixture)
     }
 
     @Test
     fun `quotes array strings with comma`() {
         @Serializable data class Items(val items: List<String>)
 
-        runFixtureTest<Items>(fixture, "quotes array strings with comma")
+        runFixtureTest<Items>(fixture)
     }
 
     @Test
     fun `quotes strings that look like booleans in arrays`() {
         @Serializable data class Items(val items: List<String>)
 
-        runFixtureTest<Items>(fixture, "quotes strings that look like booleans in arrays")
+        runFixtureTest<Items>(fixture)
     }
 
     @Test
     fun `quotes strings with structural meanings in arrays`() {
         @Serializable data class Items(val items: List<String>)
 
-        runFixtureTest<Items>(fixture, "quotes strings with structural meanings in arrays")
+        runFixtureTest<Items>(fixture)
     }
 }

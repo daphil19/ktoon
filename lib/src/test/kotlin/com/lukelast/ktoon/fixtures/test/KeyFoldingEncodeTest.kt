@@ -21,7 +21,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(fixture, "encodes folded chain to primitive (safe mode)")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -32,7 +32,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val data: Data)
 
-        runFixtureTest<Root>(fixture, "encodes folded chain with inline array")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -45,7 +45,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: A)
 
-        runFixtureTest<Root>(fixture, "encodes folded chain with tabular array")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -56,7 +56,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val data: Data)
 
-        runFixtureTest<Root>(fixture, "skips folding when segment requires quotes (safe mode)")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -68,7 +68,7 @@ class KeyFoldingEncodeTest {
         @Serializable
         data class Root(val data: Data, @SerialName("data.meta.items") val dataMetaItems: String)
 
-        runFixtureTest<Root>(fixture, "skips folding on sibling literal-key collision (safe mode)")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -81,7 +81,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(fixture, "encodes partial folding with flattenDepth=2")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -94,7 +94,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(fixture, "encodes full chain with flattenDepth=Infinity (default)")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -105,7 +105,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(fixture, "encodes standard nesting with flattenDepth=0 (no folding)")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -116,10 +116,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(
-            fixture,
-            "encodes standard nesting with flattenDepth=1 (no practical effect)",
-        )
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -130,7 +127,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(fixture, "encodes standard nesting with keyFolding=off (baseline)")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -142,7 +139,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: A)
 
-        runFixtureTest<Root>(fixture, "encodes folded chain ending with empty object")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -151,7 +148,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: A)
 
-        runFixtureTest<Root>(fixture, "stops folding at array boundary (not single-key object)")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -165,6 +162,6 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val first: First, val simple: Int, val short: Short)
 
-        runFixtureTest<Root>(fixture, "encodes folded chains preserving sibling field order")
+        runFixtureTest<Root>(fixture)
     }
 }

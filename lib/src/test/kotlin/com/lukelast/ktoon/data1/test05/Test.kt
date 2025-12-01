@@ -1,7 +1,7 @@
 package com.lukelast.ktoon.data1.test05
 
 import com.lukelast.ktoon.data1.Runner
-import com.lukelast.ktoon.data2.Garage
+import com.lukelast.ktoon.data1.Garage
 
 class Test05 : Runner() {
     override fun run() = doTest(data)

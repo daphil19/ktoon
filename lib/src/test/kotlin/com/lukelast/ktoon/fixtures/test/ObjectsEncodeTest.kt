@@ -16,168 +16,168 @@ class ObjectsEncodeTest {
     fun `preserves key order in objects`() {
         @Serializable data class Root(val id: Int, val name: String, val active: Boolean)
 
-        runFixtureTest<Root>(fixture, "preserves key order in objects")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `encodes null values in objects`() {
         @Serializable data class Root(val id: Int, val value: String?)
 
-        runFixtureTest<Root>(fixture, "encodes null values in objects")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `encodes empty objects as empty string`() {
         @Serializable class Root
 
-        runFixtureTest<Root>(fixture, "encodes empty objects as empty string")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes string value with colon`() {
         @Serializable data class Root(val note: String)
 
-        runFixtureTest<Root>(fixture, "quotes string value with colon")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes string value with comma`() {
         @Serializable data class Root(val note: String)
 
-        runFixtureTest<Root>(fixture, "quotes string value with comma")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes string value with newline`() {
         @Serializable data class Root(val text: String)
 
-        runFixtureTest<Root>(fixture, "quotes string value with newline")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes string value with embedded quotes`() {
         @Serializable data class Root(val text: String)
 
-        runFixtureTest<Root>(fixture, "quotes string value with embedded quotes")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes string value with leading space`() {
         @Serializable data class Root(val text: String)
 
-        runFixtureTest<Root>(fixture, "quotes string value with leading space")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes string value with only spaces`() {
         @Serializable data class Root(val text: String)
 
-        runFixtureTest<Root>(fixture, "quotes string value with only spaces")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes string value that looks like true`() {
         @Serializable data class Root(val v: String)
 
-        runFixtureTest<Root>(fixture, "quotes string value that looks like true")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes string value that looks like number`() {
         @Serializable data class Root(val v: String)
 
-        runFixtureTest<Root>(fixture, "quotes string value that looks like number")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes string value that looks like negative decimal`() {
         @Serializable data class Root(val v: String)
 
-        runFixtureTest<Root>(fixture, "quotes string value that looks like negative decimal")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes key with colon`() {
         @Serializable data class Root(@SerialName("order:id") val orderId: Int)
 
-        runFixtureTest<Root>(fixture, "quotes key with colon")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes key with brackets`() {
         @Serializable data class Root(@SerialName("[index]") val index: Int)
 
-        runFixtureTest<Root>(fixture, "quotes key with brackets")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes key with braces`() {
         @Serializable data class Root(@SerialName("{key}") val key: Int)
 
-        runFixtureTest<Root>(fixture, "quotes key with braces")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes key with comma`() {
         @Serializable data class Root(@SerialName("a,b") val ab: Int)
 
-        runFixtureTest<Root>(fixture, "quotes key with comma")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes key with spaces`() {
         @Serializable data class Root(@SerialName("full name") val fullName: String)
 
-        runFixtureTest<Root>(fixture, "quotes key with spaces")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes key with leading hyphen`() {
         @Serializable data class Root(@SerialName("-lead") val lead: Int)
 
-        runFixtureTest<Root>(fixture, "quotes key with leading hyphen")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes key with leading and trailing spaces`() {
         @Serializable data class Root(@SerialName(" a ") val a: Int)
 
-        runFixtureTest<Root>(fixture, "quotes key with leading and trailing spaces")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes numeric key`() {
         @Serializable data class Root(@SerialName("123") val key123: String)
 
-        runFixtureTest<Root>(fixture, "quotes numeric key")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `quotes empty string key`() {
         @Serializable data class Root(@SerialName("") val emptyKey: Int)
 
-        runFixtureTest<Root>(fixture, "quotes empty string key")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `escapes newline in key`() {
         @Serializable data class Root(@SerialName("line\nbreak") val lineBreak: Int)
 
-        runFixtureTest<Root>(fixture, "escapes newline in key")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `escapes tab in key`() {
         @Serializable data class Root(@SerialName("tab\there") val tabHere: Int)
 
-        runFixtureTest<Root>(fixture, "escapes tab in key")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
     fun `escapes quotes in key`() {
         @Serializable data class Root(@SerialName("he said \"hi\"") val quote: Int)
 
-        runFixtureTest<Root>(fixture, "escapes quotes in key")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -188,7 +188,7 @@ class ObjectsEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(fixture, "encodes deeply nested objects")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -197,6 +197,6 @@ class ObjectsEncodeTest {
 
         @Serializable data class Root(val user: User)
 
-        runFixtureTest<Root>(fixture, "encodes empty nested object")
+        runFixtureTest<Root>(fixture)
     }
 }

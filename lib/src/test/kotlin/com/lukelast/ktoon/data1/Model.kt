@@ -1,4 +1,4 @@
-package com.lukelast.ktoon.data2
+package com.lukelast.ktoon.data1
 
 import kotlinx.serialization.Serializable
 

@@ -20,7 +20,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "uses list format for objects with different fields")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -31,7 +31,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "uses list format for objects with nested values")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -40,7 +40,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "preserves field order in list items - array first")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -49,7 +49,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "preserves field order in list items - primitive first")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -58,7 +58,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "uses list format for objects containing arrays of arrays")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -69,7 +69,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "uses tabular format for nested uniform object arrays")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -80,10 +80,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(
-            fixture,
-            "uses list format for nested object arrays with mismatched keys",
-        )
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -92,7 +89,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "uses list format for objects with multiple array fields")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -101,7 +98,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "uses list format for objects with only array fields")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -110,7 +107,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "encodes objects with empty arrays in list format")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -121,10 +118,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(
-            fixture,
-            "uses canonical encoding for multi-field list-item objects with tabular arrays",
-        )
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -135,10 +129,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(
-            fixture,
-            "uses canonical encoding for single-field list-item tabular arrays",
-        )
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -147,7 +138,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "places empty arrays on hyphen line when first")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -155,7 +146,7 @@ class ArraysObjectsEncodeTest {
     fun `encodes empty object list items as bare hyphen`() {
         @Serializable data class Root(val items: List<JsonElement>)
 
-        runFixtureTest<Root>(fixture, "encodes empty object list items as bare hyphen")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -164,7 +155,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "uses field order from first object for tabular headers")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -172,6 +163,6 @@ class ArraysObjectsEncodeTest {
     fun `uses list format when one object has nested field`() {
         @Serializable data class Root(val items: List<JsonElement>)
 
-        runFixtureTest<Root>(fixture, "uses list format when one object has nested field")
+        runFixtureTest<Root>(fixture)
     }
 }

@@ -19,7 +19,7 @@ class ArraysTabularEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "encodes arrays of uniform objects in tabular format")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -28,7 +28,7 @@ class ArraysTabularEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "encodes null values in tabular format")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -37,7 +37,7 @@ class ArraysTabularEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "quotes strings containing delimiters in tabular rows")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -46,7 +46,7 @@ class ArraysTabularEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "quotes ambiguous strings in tabular rows")
+        runFixtureTest<Root>(fixture)
     }
 
     @Test
@@ -59,6 +59,6 @@ class ArraysTabularEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture, "encodes tabular arrays with keys needing quotes")
+        runFixtureTest<Root>(fixture)
     }
 }

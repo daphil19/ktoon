@@ -1,0 +1,135 @@
+{
+  "owner": "Luke",
+  "location": "Jay's Warehouse",
+  "capacity": 20,
+  "inventory": [
+    {
+      "vin": "MCL765LT001",
+      "make": "McLaren",
+      "model": "765LT",
+      "year": 2021,
+      "isStreetLegal": true,
+      "engineSpec": {
+        "type": "V8 Twin-Turbo",
+        "displacement": 4.0,
+        "horsepower": 755,
+        "torque": 590
+      },
+      "features": [
+        "Carbon Tub",
+        "Active Aero",
+        "Titanium Exhaust",
+        "Roof Scoop"
+      ],
+      "lapTimes": [
+        {
+          "track": "Silverstone",
+          "seconds": 105.4
+        },
+        {
+          "track": "Spa Francorchamps",
+          "seconds": 143.2
+        },
+        {
+          "track": "Monza",
+          "seconds": 109.8
+        },
+        {
+          "track": "Nurburgring",
+          "seconds": 415.0
+        }
+      ],
+      "modifications": [
+        {
+          "name": "Slicks",
+          "cost": 4500.0,
+          "dateInstalled": "2021-06-01"
+        },
+        {
+          "name": "Telemetry Kit",
+          "cost": 1200.0,
+          "dateInstalled": "2021-06-05"
+        }
+      ]
+    },
+    {
+      "vin": "LAMBOSTO123",
+      "make": "Lamborghini",
+      "model": "Huracan STO",
+      "year": 2022,
+      "isStreetLegal": true,
+      "engineSpec": {
+        "type": "V10 NA",
+        "displacement": 5.2,
+        "horsepower": 630,
+        "torque": 417
+      },
+      "features": [
+        "RWD",
+        "CCMR Brakes",
+        "Cofango"
+      ],
+      "lapTimes": [
+        {
+          "track": "Daytona",
+          "seconds": 112.5
+        }
+      ],
+      "modifications": [
+        {
+          "name": "Full PPF",
+          "cost": 6000.0,
+          "dateInstalled": "2022-02-01"
+        },
+        {
+          "name": "Warranty Work",
+          "cost": null,
+          "dateInstalled": "2022-08-15"
+        },
+        {
+          "name": "Titanium Bolts",
+          "cost": 800.0,
+          "dateInstalled": "2022-09-20"
+        }
+      ]
+    },
+    {
+      "vin": "DODGEACR999",
+      "make": "Dodge",
+      "model": "Viper ACR",
+      "year": 2017,
+      "isStreetLegal": true,
+      "engineSpec": {
+        "type": "V10 NA",
+        "displacement": 8.4,
+        "horsepower": 645,
+        "torque": 600
+      },
+      "features": [
+        "Manual",
+        "Extreme Aero",
+        "Adjustable Suspension",
+        "Kumho Tires",
+        "No Radio",
+        "No Sound Deadening",
+        "Lightweight Battery",
+        "Track Cooling Package"
+      ],
+      "lapTimes": [
+        {
+          "track": "Laguna Seca",
+          "seconds": 88.6
+        },
+        {
+          "track": "Road Atlanta",
+          "seconds": 86.3
+        },
+        {
+          "track": "VIR",
+          "seconds": 158.4
+        }
+      ],
+      "modifications": []
+    }
+  ]
+}

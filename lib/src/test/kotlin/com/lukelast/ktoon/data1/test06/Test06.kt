@@ -1,8 +1,18 @@
-package com.lukelast.ktoon.data2.test01
+package com.lukelast.ktoon.data1.test06
 
-import com.lukelast.ktoon.data2.*
+import com.lukelast.ktoon.data1.EngineSpec
+import com.lukelast.ktoon.data1.Garage
+import com.lukelast.ktoon.data1.LapTime
+import com.lukelast.ktoon.data1.Modification
+import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.SportsCar
 
-val data =
+/** Basic Garage test with 2 sports cars. Tests tabular arrays, nested objects, null values, and empty arrays. */
+class Test06 : Runner() {
+    override fun run() = doTest(data)
+}
+
+private val data =
     Garage(
         owner = "Luke",
         location = "Dream Garage",

@@ -9,6 +9,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.serializer
 import org.junit.jupiter.api.Assertions.assertEquals
 
+private const val fixtureTestPackagePrefix = "com.lukelast.ktoon.fixtures.test."
+
 /** JSON parser for deserializing fixture inputs. */
 private val fixtureInputJson = Json {
     ignoreUnknownKeys = false
@@ -62,8 +64,20 @@ fun <T> runFixtureTest(
 }
 
 /** Inline version with reified types for convenience. */
-inline fun <reified T> runFixtureTest(fixture: String, testName: String) {
+inline fun <reified T> runFixtureTest(
+    fixture: String,
+    testName: String = currentFixtureTestName(),
+) {
     runFixtureTest(fixture, testName, serializer<T>(), serializer<T>())
+}
+
+fun currentFixtureTestName(): String {
+    return Throwable().stackTrace.firstOrNull {
+        it.className.startsWith(fixtureTestPackagePrefix)
+    }?.methodName ?: error(
+        "Unable to determine fixture test name from stack trace; " +
+            "ensure calls originate from $fixtureTestPackagePrefix",
+    )
 }
 
 fun JsonElement.asString(): String {

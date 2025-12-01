@@ -21,7 +21,7 @@ abstract class Runner {
 
     abstract fun run()
 
-    val ktoon = Ktoon.Default
+    open val ktoon = Ktoon.Default
 
     protected inline fun <reified T> doTest(data: T) {
         val jsonPath = buildPath("data.json")
