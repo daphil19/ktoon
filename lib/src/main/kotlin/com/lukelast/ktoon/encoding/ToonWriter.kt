@@ -23,14 +23,15 @@ internal class ToonWriter(private val config: KtoonConfiguration) {
 
     fun writeIndent(level: Int) {
         if (!atLineStart) return
-        val totalSpaces = level * config.indentSize
-        val spaces = if (totalSpaces < spacesCache.size) {
-            spacesCache[totalSpaces]
-        } else {
-            error("Indent level too high")
-        }
-        write(spaces)
+        writeSpaces(level * config.indentSize)
         atLineStart = false
+    }
+
+    private fun writeSpaces(count: Int) {
+        if (count == 0) return
+        ensureAdditionalCapacity(count)
+        array.fill(' ', size, size + count)
+        size += count
     }
 
     fun writeKey(key: String) {
@@ -107,9 +108,5 @@ internal class ToonWriter(private val config: KtoonConfiguration) {
         if (array.size <= newSize) {
             array = array.copyOf(newSize.coerceAtLeast(size * 2))
         }
-    }
-
-    companion object {
-        private val spacesCache = Array(256) { " ".repeat(it) }
     }
 }
