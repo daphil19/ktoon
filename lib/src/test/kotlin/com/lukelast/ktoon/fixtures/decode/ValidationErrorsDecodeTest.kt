@@ -1,0 +1,72 @@
+package com.lukelast.ktoon.fixtures.decode
+
+import com.lukelast.ktoon.fixtures.runDecodeFixtureTest
+import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.Test
+
+/**
+ * Tests from validation-errors.json fixture - Validation errors: length mismatches, invalid escapes, syntax errors, delimiter mismatches.
+ */
+class ValidationErrorsDecodeTest {
+
+    private val fixture = "validation-errors"
+
+    @Test
+    fun `throws on array length mismatch (inline primitives - too many)`() {
+        runDecodeFixtureTest<Map<String, List<String>>>(fixture)
+    }
+
+    @Test
+    fun `throws on array length mismatch (list format - too many)`() {
+        runDecodeFixtureTest<Map<String, List<Int>>>(fixture)
+    }
+
+    @Serializable
+    data class TabularItem(val id: Int, val name: String)
+
+    @Serializable
+    data class TabularResult(val items: List<TabularItem>)
+
+    @Test
+    fun `throws on tabular row value count mismatch with header field count`() {
+        runDecodeFixtureTest<TabularResult>(fixture)
+    }
+
+    @Serializable
+    data class IdOnly(val id: Int)
+
+    @Test
+    fun `throws on tabular row count mismatch with header length`() {
+        runDecodeFixtureTest<List<IdOnly>>(fixture)
+    }
+
+    @Test
+    fun `throws on invalid escape sequence`() {
+        runDecodeFixtureTest<String>(fixture)
+    }
+
+    @Test
+    fun `throws on unterminated string`() {
+        runDecodeFixtureTest<String>(fixture)
+    }
+
+    @Test
+    fun `throws on missing colon in key-value context`() {
+        runDecodeFixtureTest<Map<String, String>>(fixture)
+    }
+
+    @Test
+    fun `throws on two primitives at root depth in strict mode`() {
+        runDecodeFixtureTest<String>(fixture)
+    }
+
+    @Test
+    fun `throws on delimiter mismatch (header declares tab, row uses comma)`() {
+        runDecodeFixtureTest<Map<String, List<TabularItem>>>(fixture)
+    }
+
+    @Test
+    fun `throws on mismatched delimiter between bracket and brace fields`() {
+        runDecodeFixtureTest<Map<String, List<TabularItem>>>(fixture)
+    }
+}
