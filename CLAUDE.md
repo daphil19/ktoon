@@ -138,7 +138,7 @@ The library uses kotlinx.serialization's encoder/decoder framework:
 ./gradlew test --tests "*EncodeTest"
 
 # Run a specific test category
-./gradlew test --tests "com.lukelast.ktoon.fixtures.test.ArraysTabularEncodeTest"
+./gradlew test --tests "com.lukelast.ktoon.fixtures.encode.ArraysTabularEncodeTest"
 ```
 
 ## Common Development Patterns

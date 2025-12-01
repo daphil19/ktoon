@@ -1,4 +1,4 @@
-package com.lukelast.ktoon.fixtures.test
+package com.lukelast.ktoon.fixtures.encode
 
 import com.lukelast.ktoon.fixtures.runFixtureTest
 import kotlinx.serialization.SerialName

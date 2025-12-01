@@ -1,6 +1,7 @@
 package com.lukelast.ktoon.fixtures
 
 import com.lukelast.ktoon.Ktoon
+import com.lukelast.ktoon.fixtures.encode.ArraysNestedEncodeTest
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.json.Json
@@ -8,14 +9,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.serializer
 import org.junit.jupiter.api.Assertions.assertEquals
-
-private const val fixtureTestPackagePrefix = "com.lukelast.ktoon.fixtures.test."
-
-/** JSON parser for deserializing fixture inputs. */
-private val fixtureInputJson = Json {
-    ignoreUnknownKeys = false
-    isLenient = false
-}
 
 /**
  * Helper function to run a fixture test with a typed data class.
@@ -63,7 +56,6 @@ fun <T> runFixtureTest(
     )
 }
 
-/** Inline version with reified types for convenience. */
 inline fun <reified T> runFixtureTest(
     fixture: String,
     testName: String = currentFixtureTestName(),
@@ -72,14 +64,21 @@ inline fun <reified T> runFixtureTest(
 }
 
 fun currentFixtureTestName(): String {
-    return Throwable()
+    val packagePrefix = ArraysNestedEncodeTest::class.java.packageName
+    return Thread.currentThread()
         .stackTrace
-        .firstOrNull { it.className.startsWith(fixtureTestPackagePrefix) }
+        .firstOrNull { it.className.startsWith(packagePrefix) }
         ?.methodName
         ?: error(
             "Unable to determine fixture test name from stack trace; " +
-                "ensure calls originate from $fixtureTestPackagePrefix"
+                "ensure calls originate from $packagePrefix"
         )
+}
+
+/** JSON parser for deserializing fixture inputs. */
+private val fixtureInputJson = Json {
+    ignoreUnknownKeys = false
+    isLenient = false
 }
 
 fun JsonElement.asString(): String {
