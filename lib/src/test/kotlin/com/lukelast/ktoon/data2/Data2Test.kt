@@ -1,5 +1,6 @@
 package com.lukelast.ktoon.data2
 
+import com.lukelast.ktoon.KeyFoldingMode.SAFE
 import com.lukelast.ktoon.Ktoon
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -21,12 +22,11 @@ class Data2Test {
                 TestData("test02", com.lukelast.ktoon.data2.test02.data),
                 TestData("test03", com.lukelast.ktoon.data2.test03.data),
                 TestData("test04", com.lukelast.ktoon.data2.test04.data),
-                TestData("test05", com.lukelast.ktoon.data2.test05.data),
             )
             .map { testData -> dynamicTest("Test ${testData.name}") { doTest(testData) } }
 }
 
-private data class TestData<T>(val name: String, val data: T)
+data class TestData<T>(val name: String, val data: T, val ktoon: Ktoon = Ktoon.Default)
 
 private inline fun <reified T> doTest(test: TestData<T>) {
     val jsonText = json.encodeToString(test.data)
@@ -35,13 +35,7 @@ private inline fun <reified T> doTest(test: TestData<T>) {
 
     val toonFile = buildPath(test.name, "data.toon")
     if (!toonFile.isReadable()) {
-        val process =
-            ProcessBuilder()
-                .command("cmd", "/c", "npx", "@toon-format/cli", jsonFile.name, "-o", toonFile.name)
-                .directory(toonFile.parent.toFile())
-                .inheritIO()
-                .start()
-        process.waitFor()
+        execToonCli(test, jsonFile, toonFile)
     }
 
     val expectedToonText = toonFile.readText()
@@ -51,11 +45,25 @@ private inline fun <reified T> doTest(test: TestData<T>) {
     assertEquals(expectedToonText, encodedToonText)
 }
 
-val json = Json { prettyPrint = true }
+private val json = Json { prettyPrint = true }
 
 private fun buildPath(dir: String, fileName: String): Path {
     val basePath = Paths.get("src", "test", "kotlin")
     val packagePath = Paths.get(Data2Test::class.java.`package`.name.replace('.', '/'))
     val fullPath = basePath.resolve(packagePath).resolve(dir).resolve(fileName)
     return fullPath
+}
+
+private fun execToonCli(test: TestData<*>, jsonFile: Path, toonFile: Path) {
+    val cmd =
+        mutableListOf("cmd", "/c", "npx", "@toon-format/cli", jsonFile.name, "-o", toonFile.name)
+
+    if (test.ktoon.configuration.keyFolding == SAFE) {
+        cmd.add("--key-folding")
+        cmd.add("safe")
+    }
+
+    val process =
+        ProcessBuilder().command(cmd).directory(toonFile.parent.toFile()).inheritIO().start()
+    process.waitFor()
 }

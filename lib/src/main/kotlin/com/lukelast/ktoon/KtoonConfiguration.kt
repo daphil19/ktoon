@@ -12,7 +12,7 @@ package com.lukelast.ktoon
  * @property delimiter Delimiter character for array values and tabular format (default: COMMA)
  * @property indentSize Number of spaces per indentation level (default: 2)
  */
-data class ToonConfiguration(
+data class KtoonConfiguration(
     val strictMode: Boolean = true,
     val keyFolding: KeyFoldingMode = KeyFoldingMode.OFF,
     val flattenDepth: Int? = null,
@@ -44,13 +44,13 @@ data class ToonConfiguration(
 
     companion object {
         /** Default configuration with strict mode enabled and standard formatting. */
-        val Default = ToonConfiguration()
+        val Default = KtoonConfiguration()
 
         /**
          * Compact configuration optimized for minimal output size. Enables key folding for more
          * compact representation.
          */
-        val Compact = ToonConfiguration(keyFolding = KeyFoldingMode.SAFE)
+        val Compact = KtoonConfiguration(keyFolding = KeyFoldingMode.SAFE)
     }
 }
 
@@ -62,35 +62,37 @@ enum class KeyFoldingMode {
     SAFE,
 }
 
-/**
- * Builder function for creating ToonConfiguration with a DSL-style syntax.
- *
- * Example:
- * ```
- * val config = ToonConfiguration {
- *     strictMode = false
- *     keyFolding = KeyFoldingMode.SAFE
- *     indentSize = 4
- * }
- * ```
- */
-inline fun ToonConfiguration(
-    builderAction: ToonConfigurationBuilder.() -> Unit
-): ToonConfiguration {
-    return ToonConfigurationBuilder().apply(builderAction).build()
-}
-
 /** Builder class for constructing ToonConfiguration instances. */
-class ToonConfigurationBuilder {
-    var strictMode: Boolean = true
-    var keyFolding: KeyFoldingMode = KeyFoldingMode.OFF
-    var flattenDepth: Int? = null
-    var pathExpansion: Boolean = false
-    var delimiter: ToonConfiguration.Delimiter = ToonConfiguration.Delimiter.COMMA
+class KtoonConfigurationBuilder {
+    /** Delimiter character used to separate values in inline arrays and tabular format. */
+    var delimiter: KtoonConfiguration.Delimiter = KtoonConfiguration.Delimiter.COMMA
+
+    /** How many spaces to use for each indentation level. */
     var indentSize: Int = 2
 
-    fun build(): ToonConfiguration =
-        ToonConfiguration(
+    /**
+     * Off by default. When on, nested objects with a single field will be flattened. For example
+     * `a.b.c: value`
+     */
+    var keyFolding: KeyFoldingMode = KeyFoldingMode.OFF
+
+    /** Enable [keyFolding] */
+    fun keyFoldingSafe() = keyFolding == KeyFoldingMode.SAFE
+
+    /**
+     * Only used when [keyFolding] is on. Default is Infinity. This will set a limit to how many
+     * objects can be flattened.
+     */
+    var flattenDepth: Int? = null
+
+    /** Used for decoding validation. */
+    var strictMode: Boolean = true
+
+    /** A decoder setting. */
+    var pathExpansion: Boolean = false
+
+    fun build(): KtoonConfiguration =
+        KtoonConfiguration(
             strictMode = strictMode,
             keyFolding = keyFolding,
             flattenDepth = flattenDepth,

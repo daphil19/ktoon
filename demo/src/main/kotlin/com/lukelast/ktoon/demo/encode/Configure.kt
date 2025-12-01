@@ -2,7 +2,7 @@ package com.lukelast.ktoon.demo.encode
 
 import com.lukelast.ktoon.KeyFoldingMode
 import com.lukelast.ktoon.Ktoon
-import com.lukelast.ktoon.ToonConfiguration
+import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.demo.*
 
 fun main() {
@@ -36,7 +36,7 @@ fun main() {
         )
 
     val ktoon = Ktoon {
-        delimiter = ToonConfiguration.Delimiter.PIPE
+        delimiter = KtoonConfiguration.Delimiter.PIPE
         keyFolding = KeyFoldingMode.SAFE
         indentSize = 1
     }

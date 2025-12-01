@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures
 
-import com.lukelast.ktoon.ToonConfiguration
+import com.lukelast.ktoon.KtoonConfiguration
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -81,8 +81,8 @@ data class FixtureOptions(
     val flattenDepth: Int? = null,
     val expandPaths: String = "off",
 ) {
-    fun toToonConfiguration(): ToonConfiguration {
-        return ToonConfiguration(
+    fun toToonConfiguration(): KtoonConfiguration {
+        return KtoonConfiguration(
             delimiter = delimiter.toDelimiter(),
             indentSize = indent,
             strictMode = strict,
@@ -94,11 +94,11 @@ data class FixtureOptions(
         )
     }
 
-    fun String.toDelimiter(): ToonConfiguration.Delimiter =
+    fun String.toDelimiter(): KtoonConfiguration.Delimiter =
         when (this) {
-            "," -> ToonConfiguration.Delimiter.COMMA
-            "\t" -> ToonConfiguration.Delimiter.TAB
-            "|" -> ToonConfiguration.Delimiter.PIPE
+            "," -> KtoonConfiguration.Delimiter.COMMA
+            "\t" -> KtoonConfiguration.Delimiter.TAB
+            "|" -> KtoonConfiguration.Delimiter.PIPE
             else -> throw IllegalArgumentException("Unknown delimiter: $this")
         }
 }

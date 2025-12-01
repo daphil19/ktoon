@@ -1,8 +1,8 @@
 package com.lukelast.ktoon.decoding
 
-import com.lukelast.ktoon.ToonConfiguration
-import com.lukelast.ktoon.ToonParsingException
-import com.lukelast.ktoon.ToonValidationException
+import com.lukelast.ktoon.KtoonConfiguration
+import com.lukelast.ktoon.KtoonParsingException
+import com.lukelast.ktoon.KtoonValidationException
 import com.lukelast.ktoon.encoding.StringQuoting
 import com.lukelast.ktoon.validation.ValidationEngine
 
@@ -18,7 +18,7 @@ import com.lukelast.ktoon.validation.ValidationEngine
  * - Primitive values
  * - Validation in strict mode
  */
-internal class ToonReader(private val tokens: List<Token>, private val config: ToonConfiguration) {
+internal class ToonReader(private val tokens: List<Token>, private val config: KtoonConfiguration) {
     private var position = 0
     private val validator = ValidationEngine(config)
 
@@ -45,7 +45,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: T
                 parsePrimitive(first.content, first.line)
             }
             else -> {
-                throw ToonParsingException("Unexpected token type at root", 1)
+                throw KtoonParsingException("Unexpected token type at root", 1)
             }
         }
     }
@@ -69,7 +69,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: T
 
                     // Check for duplicate keys in strict mode
                     if (config.strictMode && properties.containsKey(key)) {
-                        throw ToonValidationException.duplicateKey(key, token.line)
+                        throw KtoonValidationException.duplicateKey(key, token.line)
                     }
 
                     // Read the value
@@ -160,7 +160,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: T
     private fun readTabularArray(header: Token.ArrayHeader): ToonValue.Array {
         val fields =
             header.fields
-                ?: throw ToonParsingException("Tabular array missing field list", header.line)
+                ?: throw KtoonParsingException("Tabular array missing field list", header.line)
 
         val elements = mutableListOf<ToonValue.Object>()
         val expectedIndent = header.indent + config.indentSize
@@ -318,7 +318,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: T
     /** Peeks at the current token without consuming it. */
     private fun peek(): Token {
         if (position >= tokens.size) {
-            throw ToonParsingException.unexpectedEndOfInput("more tokens")
+            throw KtoonParsingException.unexpectedEndOfInput("more tokens")
         }
         return tokens[position]
     }
@@ -334,7 +334,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: T
     private inline fun <reified T : Token> consume(): T {
         val token = peek()
         if (token !is T) {
-            throw ToonParsingException(
+            throw KtoonParsingException(
                 "Expected ${T::class.simpleName}, got ${token::class.simpleName}",
                 -1,
             )

@@ -1,12 +1,11 @@
 package com.lukelast.ktoon.data1.test01
 
-import com.lukelast.ktoon.data1.doTest
+import com.lukelast.ktoon.data1.Runner
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Test
 
 /** Example from https://toontools.vercel.app/tools/json-to-toon "Simple Example". */
-class Test01Test {
-    @Test fun test() = doTest(this, data)
+class Test01 : Runner() {
+    override fun run() = doTest(data)
 }
 
 @Serializable data class UserList(val users: List<User>)

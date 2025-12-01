@@ -78,7 +78,7 @@ class KtoonContextualTest {
         override fun deserialize(decoder: Decoder): Color {
             val hex = decoder.decodeString().removePrefix("#")
             return Color(
-                r = hex.substring(0, 2).toInt(16),
+                r = hex.take(2).toInt(16),
                 g = hex.substring(2, 4).toInt(16),
                 b = hex.substring(4, 6).toInt(16),
             )

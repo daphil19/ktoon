@@ -1,12 +1,11 @@
 package com.lukelast.ktoon.data1.test10
 
-import com.lukelast.ktoon.data1.doTest
+import com.lukelast.ktoon.data1.Runner
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Test
 
 /** https://github.com/toon-format/spec/blob/main/examples/conversions/api-response.toon */
-class Test10 {
-    @Test fun test() = doTest(this, data)
+class Test10 : Runner() {
+    override fun run() = doTest(data)
 }
 
 val data =

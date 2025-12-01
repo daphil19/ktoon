@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.encoding
 
-import com.lukelast.ktoon.ToonParsingException
+import com.lukelast.ktoon.KtoonParsingException
 
 /** Utility for quoting and unquoting strings according to TOON format rules. */
 internal object StringQuoting {
@@ -138,7 +138,7 @@ internal object StringQuoting {
     fun unquote(str: String, line: Int = -1, column: Int = -1): String {
         if (!str.startsWith('"')) return str
         if (!str.endsWith('"') || str.length < 2)
-            throw ToonParsingException.unterminatedString(line, column)
+            throw KtoonParsingException.unterminatedString(line, column)
         val content = str.substring(1, str.length - 1)
         if (content.indexOf('\\') == -1) return content
 
@@ -149,7 +149,7 @@ internal object StringQuoting {
             val c = content[i]
             if (c == '\\') {
                 if (i + 1 >= len)
-                    throw ToonParsingException.invalidEscapeSequence("\\", line, column + i)
+                    throw KtoonParsingException.invalidEscapeSequence("\\", line, column + i)
                 when (val next = content[i + 1]) {
                     '\\' -> sb.append('\\')
                     '"' -> sb.append('"')
@@ -157,7 +157,7 @@ internal object StringQuoting {
                     'r' -> sb.append('\r')
                     't' -> sb.append('\t')
                     else ->
-                        throw ToonParsingException.invalidEscapeSequence(
+                        throw KtoonParsingException.invalidEscapeSequence(
                             "\\$next",
                             line,
                             column + i,

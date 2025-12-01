@@ -40,7 +40,7 @@ import kotlinx.serialization.modules.SerializersModule
  */
 class Ktoon(
     val serializersModule: SerializersModule = EmptySerializersModule(),
-    val configuration: ToonConfiguration = ToonConfiguration.Default,
+    val configuration: KtoonConfiguration = KtoonConfiguration.Default,
 ) {
 
     /**
@@ -49,7 +49,7 @@ class Ktoon(
      * @param serializer The serialization strategy for type T
      * @param value The value to encode
      * @return The encoded TOON string
-     * @throws ToonEncodingException if encoding fails
+     * @throws KtoonEncodingException if encoding fails
      */
     fun <T> encodeToString(serializer: SerializationStrategy<T>, value: T): String {
         val writer = ToonWriter(configuration)
@@ -58,10 +58,10 @@ class Ktoon(
         try {
             encoder.encodeSerializableValue(serializer, value)
             return writer.toString()
-        } catch (e: ToonException) {
+        } catch (e: KtoonException) {
             throw e
         } catch (e: Exception) {
-            throw ToonEncodingException("Failed to encode value to TOON format", e)
+            throw KtoonEncodingException("Failed to encode value to TOON format", e)
         }
     }
 
@@ -71,9 +71,9 @@ class Ktoon(
      * @param deserializer The deserialization strategy for type T
      * @param string The TOON format string to decode
      * @return The decoded value
-     * @throws ToonDecodingException if decoding fails
-     * @throws ToonParsingException if parsing fails
-     * @throws ToonValidationException if validation fails (in strict mode)
+     * @throws KtoonDecodingException if decoding fails
+     * @throws KtoonParsingException if parsing fails
+     * @throws KtoonValidationException if validation fails (in strict mode)
      */
     fun <T> decodeFromString(deserializer: DeserializationStrategy<T>, string: String): T {
         try {
@@ -87,10 +87,10 @@ class Ktoon(
             // Decode using kotlinx.serialization
             val decoder = ToonDecoder(reader, serializersModule, configuration)
             return decoder.decodeSerializableValue(deserializer)
-        } catch (e: ToonException) {
+        } catch (e: KtoonException) {
             throw e
         } catch (e: Exception) {
-            throw ToonDecodingException("Failed to decode TOON format string", e)
+            throw KtoonDecodingException("Failed to decode TOON format string", e)
         }
     }
 
@@ -129,7 +129,7 @@ class Ktoon(
          * Compact TOON instance optimized for minimal output size. Enables key folding for more
          * compact representation.
          */
-        val Compact = Ktoon(configuration = ToonConfiguration.Compact)
+        val Compact = Ktoon(configuration = KtoonConfiguration.Compact)
 
         /**
          * Creates a Ktoon instance with a custom configuration using a DSL-style builder.
@@ -143,8 +143,8 @@ class Ktoon(
          * }
          * ```
          */
-        operator fun invoke(builderAction: ToonConfigurationBuilder.() -> Unit): Ktoon {
-            val config = ToonConfiguration(builderAction)
+        operator fun invoke(builder: KtoonConfigurationBuilder.() -> Unit): Ktoon {
+            val config = KtoonConfigurationBuilder().apply(builder).build()
             return Ktoon(configuration = config)
         }
 
@@ -161,9 +161,9 @@ class Ktoon(
          */
         operator fun invoke(
             serializersModule: SerializersModule,
-            builderAction: ToonConfigurationBuilder.() -> Unit,
+            builder: KtoonConfigurationBuilder.() -> Unit,
         ): Ktoon {
-            val config = ToonConfiguration(builderAction)
+            val config = KtoonConfigurationBuilder().apply(builder).build()
             return Ktoon(serializersModule, config)
         }
     }

@@ -1,7 +1,7 @@
 package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KeyFoldingMode
-import com.lukelast.ktoon.ToonConfiguration
+import com.lukelast.ktoon.KtoonConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -14,7 +14,7 @@ import kotlinx.serialization.modules.SerializersModule
 @OptIn(ExperimentalSerializationApi::class)
 internal class ToonObjectEncoder(
     private val writer: ToonWriter,
-    private val config: ToonConfiguration,
+    private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,
     private val indentLevel: Int,
     private val isRoot: Boolean = false,

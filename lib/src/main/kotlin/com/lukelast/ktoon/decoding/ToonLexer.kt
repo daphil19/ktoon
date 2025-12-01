@@ -1,7 +1,7 @@
 package com.lukelast.ktoon.decoding
 
-import com.lukelast.ktoon.ToonConfiguration
-import com.lukelast.ktoon.ToonParsingException
+import com.lukelast.ktoon.KtoonConfiguration
+import com.lukelast.ktoon.KtoonParsingException
 
 /**
  * Lexer for tokenizing TOON format text.
@@ -16,7 +16,7 @@ import com.lukelast.ktoon.ToonParsingException
  * The lexer produces a stream of tokens that the parser (ToonReader) will consume to build the
  * logical structure.
  */
-internal class ToonLexer(private val input: String, private val config: ToonConfiguration) {
+internal class ToonLexer(private val input: String, private val config: KtoonConfiguration) {
     private var currentLine = 0
     private val tokens = mutableListOf<Token>()
 
@@ -99,7 +99,7 @@ internal class ToonLexer(private val input: String, private val config: ToonConf
             if (char == ' ') {
                 count++
             } else if (char == '\t' && config.strictMode) {
-                throw ToonParsingException(
+                throw KtoonParsingException(
                     "Tabs are not allowed in indentation (strict mode)",
                     currentLine,
                     count,
@@ -159,10 +159,10 @@ internal class ToonLexer(private val input: String, private val config: ToonConf
         val delimiter =
             when {
                 bracketContent.endsWith('\t') -> {
-                    ToonConfiguration.Delimiter.TAB
+                    KtoonConfiguration.Delimiter.TAB
                 }
                 bracketContent.endsWith('|') -> {
-                    ToonConfiguration.Delimiter.PIPE
+                    KtoonConfiguration.Delimiter.PIPE
                 }
                 else -> {
                     config.delimiter // Use configured default
@@ -177,7 +177,7 @@ internal class ToonLexer(private val input: String, private val config: ToonConf
             try {
                 lengthStr.toInt()
             } catch (e: NumberFormatException) {
-                throw ToonParsingException.invalidArrayFormat(
+                throw KtoonParsingException.invalidArrayFormat(
                     "Invalid array length: '$lengthStr'",
                     currentLine,
                 )
@@ -188,7 +188,7 @@ internal class ToonLexer(private val input: String, private val config: ToonConf
             if (bracketEnd + 1 < keyPart.length && keyPart[bracketEnd + 1] == '{') {
                 val fieldsEnd = keyPart.indexOf('}', bracketEnd + 2)
                 if (fieldsEnd == -1) {
-                    throw ToonParsingException.invalidArrayFormat(
+                    throw KtoonParsingException.invalidArrayFormat(
                         "Unterminated field list in tabular array header",
                         currentLine,
                     )
@@ -207,7 +207,7 @@ internal class ToonLexer(private val input: String, private val config: ToonConf
         val key: String,
         val length: Int,
         val fields: List<String>?,
-        val delimiter: ToonConfiguration.Delimiter,
+        val delimiter: KtoonConfiguration.Delimiter,
     )
 }
 
@@ -244,7 +244,7 @@ internal sealed class Token {
         val key: String,
         val length: Int,
         val fields: List<String>?,
-        val delimiter: ToonConfiguration.Delimiter,
+        val delimiter: KtoonConfiguration.Delimiter,
         val indent: Int,
         val line: Int,
     ) : Token()

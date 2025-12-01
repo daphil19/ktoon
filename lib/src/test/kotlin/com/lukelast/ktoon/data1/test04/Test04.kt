@@ -1,11 +1,10 @@
 package com.lukelast.ktoon.data1.test04
 
-import com.lukelast.ktoon.data1.doTest
+import com.lukelast.ktoon.data1.Runner
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Test
 
-class Test04Test {
-    @Test fun test() = doTest(this, employees)
+class Test04: Runner() {
+    override fun run() = doTest(employees)
 }
 
 @Serializable

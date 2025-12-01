@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.encoding
 
-import com.lukelast.ktoon.ToonConfiguration
+import com.lukelast.ktoon.KtoonConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
@@ -12,7 +12,7 @@ import kotlinx.serialization.modules.SerializersModule
 @OptIn(ExperimentalSerializationApi::class)
 internal class ToonEncoder(
     private val writer: ToonWriter,
-    private val config: ToonConfiguration,
+    private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,
 ) : AbstractEncoder() {
 

@@ -1,9 +1,9 @@
 package com.lukelast.ktoon.encoding
 
-import com.lukelast.ktoon.ToonConfiguration
+import com.lukelast.ktoon.KtoonConfiguration
 
 /** Buffered writer for TOON format output with indentation management. */
-internal class ToonWriter(private val config: ToonConfiguration, initialCapacity: Int = 1024) {
+internal class ToonWriter(private val config: KtoonConfiguration, initialCapacity: Int = 1024) {
     private val buffer = StringBuilder(initialCapacity)
     private var atLineStart = true
 

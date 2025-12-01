@@ -48,7 +48,7 @@ class ParseTest {
 
         val config = options.toToonConfiguration()
 
-        assertEquals(com.lukelast.ktoon.ToonConfiguration.Delimiter.TAB, config.delimiter)
+        assertEquals(com.lukelast.ktoon.KtoonConfiguration.Delimiter.TAB, config.delimiter)
         assertEquals(4, config.indentSize)
         assertEquals(false, config.strictMode)
         assertEquals(KeyFoldingMode.SAFE, config.keyFolding)

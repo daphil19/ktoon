@@ -19,9 +19,9 @@ import kotlinx.serialization.SerialInfo
  * data class User(
  *     val id: Int,
  *     val name: String,
- *     @ToonArrayFormat(ArrayFormat.INLINE)
+ *     @KtoonArrayFormat(ArrayFormat.INLINE)
  *     val tags: List<String>,  // Force inline format
- *     @ToonArrayFormat(ArrayFormat.EXPANDED)
+ *     @KtoonArrayFormat(ArrayFormat.EXPANDED)
  *     val roles: List<Role>  // Force expanded format
  * )
  * ```
@@ -32,7 +32,7 @@ import kotlinx.serialization.SerialInfo
 @SerialInfo
 @Target(AnnotationTarget.PROPERTY, AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class ToonArrayFormat(val format: ArrayFormat)
+annotation class KtoonArrayFormat(val format: ArrayFormat)
 
 /** TOON array format options for the annotation. */
 enum class ArrayFormat {

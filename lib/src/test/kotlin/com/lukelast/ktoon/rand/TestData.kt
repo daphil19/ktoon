@@ -66,7 +66,10 @@ data class CollectionCoop(
 )
 
 @Serializable
-data class ArrayPasture(
+@Suppress("ArrayInDataClass")
+data class ArrayPasture
+@OptIn(ExperimentalUnsignedTypes::class)
+constructor(
     val goatNameArray: Array<String>,
     val herdGrid: Array<Array<FarmAnimal>>,
     val sheepAges: IntArray,

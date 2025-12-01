@@ -1,7 +1,7 @@
 package com.lukelast.ktoon.validation
 
-import com.lukelast.ktoon.ToonConfiguration
-import com.lukelast.ktoon.ToonValidationException
+import com.lukelast.ktoon.KtoonConfiguration
+import com.lukelast.ktoon.KtoonValidationException
 
 /**
  * Validation engine for TOON format strict mode.
@@ -17,7 +17,7 @@ import com.lukelast.ktoon.ToonValidationException
  * When strict mode is disabled, validation checks are skipped for better compatibility with
  * malformed input.
  */
-internal class ValidationEngine(private val config: ToonConfiguration) {
+internal class ValidationEngine(private val config: KtoonConfiguration) {
 
     /**
      * Validates that an array's actual length matches its declared length.
@@ -25,13 +25,13 @@ internal class ValidationEngine(private val config: ToonConfiguration) {
      * @param declaredLength Length specified in array header
      * @param actualLength Actual number of elements found
      * @param line Line number for error reporting
-     * @throws ToonValidationException if validation fails in strict mode
+     * @throws KtoonValidationException if validation fails in strict mode
      */
     fun validateArrayLength(declaredLength: Int, actualLength: Int, line: Int) {
         if (!config.strictMode) return
 
         if (declaredLength != actualLength) {
-            throw ToonValidationException.arrayLengthMismatch(
+            throw KtoonValidationException.arrayLengthMismatch(
                 declared = declaredLength,
                 actual = actualLength,
                 line = line,
@@ -46,7 +46,7 @@ internal class ValidationEngine(private val config: ToonConfiguration) {
      * @param actualFieldCount Number of fields in this row
      * @param rowIndex Index of the row being validated
      * @param line Line number for error reporting
-     * @throws ToonValidationException if validation fails in strict mode
+     * @throws KtoonValidationException if validation fails in strict mode
      */
     fun validateTabularRow(
         expectedFieldCount: Int,
@@ -57,7 +57,7 @@ internal class ValidationEngine(private val config: ToonConfiguration) {
         if (!config.strictMode) return
 
         if (expectedFieldCount != actualFieldCount) {
-            throw ToonValidationException.tabularFieldMismatch(
+            throw KtoonValidationException.tabularFieldMismatch(
                 expected = expectedFieldCount,
                 actual = actualFieldCount,
                 elementIndex = rowIndex,
@@ -71,13 +71,13 @@ internal class ValidationEngine(private val config: ToonConfiguration) {
      *
      * @param indent Indentation level in spaces
      * @param line Line number for error reporting
-     * @throws ToonValidationException if validation fails in strict mode
+     * @throws KtoonValidationException if validation fails in strict mode
      */
     fun validateIndentation(indent: Int, line: Int) {
         if (!config.strictMode) return
 
         if (indent % config.indentSize != 0) {
-            throw ToonValidationException.invalidIndentation(
+            throw KtoonValidationException.invalidIndentation(
                 indent = indent,
                 indentSize = config.indentSize,
                 line = line,
@@ -92,13 +92,13 @@ internal class ValidationEngine(private val config: ToonConfiguration) {
      * @param key The key to check
      * @param existingKeys Set of keys already seen
      * @param line Line number for error reporting
-     * @throws ToonValidationException if key is duplicate in strict mode
+     * @throws KtoonValidationException if key is duplicate in strict mode
      */
     fun validateUniqueKey(key: String, existingKeys: Set<String>, line: Int) {
         if (!config.strictMode) return
 
         if (key in existingKeys) {
-            throw ToonValidationException.duplicateKey(key, line)
+            throw KtoonValidationException.duplicateKey(key, line)
         }
     }
 
@@ -177,13 +177,13 @@ internal class ValidationEngine(private val config: ToonConfiguration) {
      *
      * @param hasBlankLines Whether blank lines were found
      * @param line Line number for error reporting
-     * @throws ToonValidationException if blank lines found in strict mode
+     * @throws KtoonValidationException if blank lines found in strict mode
      */
     fun validateNoBlankLinesInArray(hasBlankLines: Boolean, line: Int) {
         if (!config.strictMode) return
 
         if (hasBlankLines) {
-            throw ToonValidationException(
+            throw KtoonValidationException(
                 "Blank lines are not allowed within arrays in strict mode",
                 line,
             )
@@ -196,13 +196,13 @@ internal class ValidationEngine(private val config: ToonConfiguration) {
      * @param hasColon Whether a colon was found
      * @param key The key being validated
      * @param line Line number for error reporting
-     * @throws ToonValidationException if colon missing in strict mode
+     * @throws KtoonValidationException if colon missing in strict mode
      */
     fun validateColonAfterKey(hasColon: Boolean, key: String, line: Int) {
         if (!config.strictMode) return
 
         if (!hasColon) {
-            throw ToonValidationException("Missing colon after key '$key'", line)
+            throw KtoonValidationException("Missing colon after key '$key'", line)
         }
     }
 
@@ -211,13 +211,13 @@ internal class ValidationEngine(private val config: ToonConfiguration) {
      *
      * @param hasTabIndentation Whether tab indentation was found
      * @param line Line number for error reporting
-     * @throws ToonValidationException if tabs found in strict mode
+     * @throws KtoonValidationException if tabs found in strict mode
      */
     fun validateNoTabIndentation(hasTabIndentation: Boolean, line: Int) {
         if (!config.strictMode) return
 
         if (hasTabIndentation) {
-            throw ToonValidationException(
+            throw KtoonValidationException(
                 "Tabs are not allowed for indentation in strict mode (use spaces)",
                 line,
             )
@@ -238,7 +238,7 @@ internal class ValidationEngine(private val config: ToonConfiguration) {
             '|' -> true
             else -> {
                 if (config.strictMode) {
-                    throw ToonValidationException(
+                    throw KtoonValidationException(
                         "Invalid delimiter '$delimiter' (must be comma, tab, or pipe)",
                         line,
                     )

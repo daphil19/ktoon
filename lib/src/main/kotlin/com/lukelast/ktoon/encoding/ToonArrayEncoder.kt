@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.encoding
 
-import com.lukelast.ktoon.ToonConfiguration
+import com.lukelast.ktoon.KtoonConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
@@ -12,7 +12,7 @@ import kotlinx.serialization.modules.SerializersModule
 @OptIn(ExperimentalSerializationApi::class)
 internal class ToonArrayEncoder(
     private val writer: ToonWriter,
-    private val config: ToonConfiguration,
+    private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,
     private val indentLevel: Int,
     private val key: String?,
@@ -245,7 +245,7 @@ internal class ToonArrayEncoder(
 /** Captures field values or array elements during encoding. */
 @OptIn(ExperimentalSerializationApi::class)
 private class ElementCapturer(
-    private val config: ToonConfiguration,
+    private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,
     private val descriptor: SerialDescriptor,
     private val onComplete: (List<Pair<String, ToonArrayEncoder.EncodedElement>>) -> Unit,
