@@ -147,7 +147,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         if (config.pathExpansion && !rawKey.startsWith("\"") && key.contains('.')) {
             val parts = key.split('.')
             // Only expand if all parts are valid identifiers (Safe Mode)
-            if (parts.all { isValidIdentifier(it) }) {
+            if (parts.all { StringQuoting.isIdentifierSegment(it) }) {
                 insertExpandedProperty(properties, parts, value, line)
                 return
             }
@@ -158,15 +158,6 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
             throw KtoonValidationException.duplicateKey(key, line)
         }
         properties[key] = value
-    }
-
-    private fun isValidIdentifier(s: String): Boolean {
-        if (s.isEmpty()) return false
-        if (!s[0].isLetter() && s[0] != '_') return false
-        for (i in 1 until s.length) {
-            if (!s[i].isLetterOrDigit() && s[i] != '_') return false
-        }
-        return true
     }
 
     private fun insertExpandedProperty(
