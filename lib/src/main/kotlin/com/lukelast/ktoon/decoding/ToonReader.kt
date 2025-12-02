@@ -36,30 +36,32 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         }
 
         // Determine root type from first token
-        val result = when (val first = peek()) {
-            is Token.ArrayHeader -> {
-                // §5: Root array header has NO KEY; if there's a key, treat as object field with array value
-                if (first.key.isEmpty()) {
-                    readArray()
-                } else {
+        val result =
+            when (val first = peek()) {
+                is Token.ArrayHeader -> {
+                    // §5: Root array header has NO KEY; if there's a key, treat as object field
+                    // with array value
+                    if (first.key.isEmpty()) {
+                        readArray()
+                    } else {
+                        readObject(baseIndent = 0)
+                    }
+                }
+                is Token.Dash -> {
+                    readExpandedArrayFromRoot()
+                }
+                is Token.Key -> {
                     readObject(baseIndent = 0)
                 }
+                is Token.Value -> {
+                    // Root primitive
+                    advance()
+                    parsePrimitive(first.content, first.line)
+                }
+                else -> {
+                    throw KtoonParsingException("Unexpected token type at root", 1)
+                }
             }
-            is Token.Dash -> {
-                readExpandedArrayFromRoot()
-            }
-            is Token.Key -> {
-                readObject(baseIndent = 0)
-            }
-            is Token.Value -> {
-                // Root primitive
-                advance()
-                parsePrimitive(first.content, first.line)
-            }
-            else -> {
-                throw KtoonParsingException("Unexpected token type at root", 1)
-            }
-        }
 
         // Check for trailing tokens in strict mode
         skipBlankLines() // Allow trailing blank lines
@@ -84,11 +86,12 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
             }
 
             // Check if we've moved back to parent level
-            val indent = when (token) {
-                is Token.Key -> token.indent
-                is Token.ArrayHeader -> token.indent
-                else -> -1 // Should not happen for valid properties
-            }
+            val indent =
+                when (token) {
+                    is Token.Key -> token.indent
+                    is Token.ArrayHeader -> token.indent
+                    else -> -1 // Should not happen for valid properties
+                }
 
             if (indent != -1) {
                 if (indent < baseIndent) {
@@ -97,7 +100,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 if (indent > baseIndent && config.strictMode) {
                     throw KtoonValidationException(
                         "Invalid indentation: expected $baseIndent, got $indent",
-                        token.line
+                        token.line,
                     )
                 }
             }
@@ -138,7 +141,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         key: String,
         rawKey: String,
         value: ToonValue,
-        line: Int
+        line: Int,
     ) {
         // Expand paths if enabled and key is not quoted
         if (config.pathExpansion && !rawKey.startsWith("\"") && key.contains('.')) {
@@ -170,7 +173,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         properties: MutableMap<String, ToonValue>,
         parts: List<String>,
         value: ToonValue,
-        line: Int
+        line: Int,
     ) {
         val part = parts[0]
 
@@ -199,7 +202,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
             if (config.strictMode) {
                 throw KtoonValidationException(
                     "Path expansion conflict: '$part' is already defined as ${existing::class.simpleName}",
-                    line
+                    line,
                 )
             }
             // Non-strict: Overwrite with new object (LWW)
@@ -265,7 +268,8 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     private fun readInlineArray(header: Token.ArrayHeader): ToonValue.Array {
         val valueToken = consume<Token.InlineArrayValue>()
 
-        // Split by delimiter (§12: surrounding whitespace SHOULD be tolerated; empty tokens decode to empty string)
+        // Split by delimiter (§12: surrounding whitespace SHOULD be tolerated; empty tokens decode
+        // to empty string)
         val values =
             StringQuoting.splitRespectingQuotes(valueToken.content, header.delimiter.char)
                 .map { it.trim() }
@@ -286,13 +290,17 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
 
         val elements = mutableListOf<ToonValue.Object>()
 
-        // Check if this array header is on the same line as a preceding dash (nested in expanded array)
-        // If so, and it has NO key (it's the direct value of the list item), the expected indentation
+        // Check if this array header is on the same line as a preceding dash (nested in expanded
+        // array)
+        // If so, and it has NO key (it's the direct value of the list item), the expected
+        // indentation
         // for children should be relative to the dash.
         val previousToken = if (position >= 2) tokens[position - 2] else null
         val isOnDashLine = previousToken is Token.Dash && previousToken.line == header.line
 
-        val baseIndent = if (isOnDashLine && header.key.isEmpty()) header.indent - config.indentSize else header.indent
+        val baseIndent =
+            if (isOnDashLine && header.key.isEmpty()) header.indent - config.indentSize
+            else header.indent
         val expectedIndent = baseIndent + config.indentSize
 
         while (position < tokens.size) {
@@ -336,7 +344,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         header: Token.ArrayHeader,
         fields: List<String>,
         elements: MutableList<ToonValue.Object>,
-        line: Int
+        line: Int,
     ) {
         val values =
             StringQuoting.splitRespectingQuotes(content, header.delimiter.char)
@@ -355,15 +363,19 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     private fun readExpandedArray(header: Token.ArrayHeader): ToonValue.Array {
         val elements = mutableListOf<ToonValue>()
 
-        // Check if this array header is on the same line as a preceding dash (nested in expanded array)
-        // If so, and it has NO key (it's the direct value of the list item), the expected indentation
+        // Check if this array header is on the same line as a preceding dash (nested in expanded
+        // array)
+        // If so, and it has NO key (it's the direct value of the list item), the expected
+        // indentation
         // for children should be relative to the dash.
         // If it HAS a key (it's a property of an object in the list), it introduces a new level,
         // so indentation should be relative to the header.
         val previousToken = if (position >= 2) tokens[position - 2] else null
         val isOnDashLine = previousToken is Token.Dash && previousToken.line == header.line
 
-        val baseIndent = if (isOnDashLine && header.key.isEmpty()) header.indent - config.indentSize else header.indent
+        val baseIndent =
+            if (isOnDashLine && header.key.isEmpty()) header.indent - config.indentSize
+            else header.indent
         val expectedIndent = baseIndent + config.indentSize
 
         while (position < tokens.size) {
@@ -406,7 +418,8 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
             val token = peek()
 
             if (token is Token.BlankLine) {
-                // Root array allows blank lines? Spec says "Blank lines are not allowed within arrays in strict mode"
+                // Root array allows blank lines? Spec says "Blank lines are not allowed within
+                // arrays in strict mode"
                 // If it's a root array, it's still an array.
                 validator.validateNoBlankLinesInArray(true, token.line)
                 advance()

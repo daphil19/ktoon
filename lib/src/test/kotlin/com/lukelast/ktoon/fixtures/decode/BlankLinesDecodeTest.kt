@@ -5,7 +5,8 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
 /**
- * Tests from blank-lines.json fixture - Blank line handling: strict mode errors on blank lines inside arrays, accepts blank lines outside arrays.
+ * Tests from blank-lines.json fixture - Blank line handling: strict mode errors on blank lines
+ * inside arrays, accepts blank lines outside arrays.
  */
 class BlankLinesDecodeTest {
 
@@ -16,11 +17,9 @@ class BlankLinesDecodeTest {
         runDecodeFixtureTest<Map<String, List<String>>>(fixture)
     }
 
-    @Serializable
-    data class TabularItem(val id: Int)
+    @Serializable data class TabularItem(val id: Int)
 
-    @Serializable
-    data class TabularResult(val items: List<TabularItem>)
+    @Serializable data class TabularResult(val items: List<TabularItem>)
 
     @Test
     fun `throws on blank line inside tabular array`() {
@@ -37,27 +36,23 @@ class BlankLinesDecodeTest {
         runDecodeFixtureTest<Map<String, List<String>>>(fixture)
     }
 
-    @Serializable
-    data class NestedItem(val inner: List<String>)
+    @Serializable data class NestedItem(val inner: List<String>)
 
-    @Serializable
-    data class OuterResult(val outer: List<NestedItem>)
+    @Serializable data class OuterResult(val outer: List<NestedItem>)
 
     @Test
     fun `throws on blank line in nested list array`() {
         runDecodeFixtureTest<OuterResult>(fixture)
     }
 
-    @Serializable
-    data class TwoFields(val a: Int, val b: Int)
+    @Serializable data class TwoFields(val a: Int, val b: Int)
 
     @Test
     fun `accepts blank line between root-level fields`() {
         runDecodeFixtureTest<TwoFields>(fixture)
     }
 
-    @Serializable
-    data class SingleField(val a: Int)
+    @Serializable data class SingleField(val a: Int)
 
     @Test
     fun `accepts trailing newline at end of file`() {
@@ -69,19 +64,16 @@ class BlankLinesDecodeTest {
         runDecodeFixtureTest<SingleField>(fixture)
     }
 
-    @Serializable
-    data class WithArray(val items: List<String>, val b: Int)
+    @Serializable data class WithArray(val items: List<String>, val b: Int)
 
     @Test
     fun `accepts blank line after array ends`() {
         runDecodeFixtureTest<WithArray>(fixture)
     }
 
-    @Serializable
-    data class NestedWithBlank(val a: NestedB)
+    @Serializable data class NestedWithBlank(val a: NestedB)
 
-    @Serializable
-    data class NestedB(val b: Int, val c: Int)
+    @Serializable data class NestedB(val b: Int, val c: Int)
 
     @Test
     fun `accepts blank line between nested object fields`() {
@@ -93,11 +85,9 @@ class BlankLinesDecodeTest {
         runDecodeFixtureTest<Map<String, List<String>>>(fixture)
     }
 
-    @Serializable
-    data class TabularWithBlank(val id: Int, val name: String)
+    @Serializable data class TabularWithBlank(val id: Int, val name: String)
 
-    @Serializable
-    data class TabularBlankResult(val items: List<TabularWithBlank>)
+    @Serializable data class TabularBlankResult(val items: List<TabularWithBlank>)
 
     @Test
     fun `ignores blank lines inside tabular array when strict=false`() {

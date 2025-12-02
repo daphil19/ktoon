@@ -5,7 +5,8 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
 /**
- * Tests from root-form.json fixture - Root form detection: empty document, single primitive, multiple primitives.
+ * Tests from root-form.json fixture - Root form detection: empty document, single primitive,
+ * multiple primitives.
  */
 class RootFormDecodeTest {
 
@@ -13,8 +14,7 @@ class RootFormDecodeTest {
 
     @Test
     fun `parses empty document as empty object`() {
-        @Serializable
-        class EmptyObject
+        @Serializable class EmptyObject
         runDecodeFixtureTest<EmptyObject>(fixture)
     }
 }

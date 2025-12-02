@@ -64,14 +64,12 @@ internal class ToonMapEncoder(
     }
 
     override fun encodeString(value: String) {
-        if (isKey) encodePrimitive(value)
-        else encodePrimitive(quoteValue(value))
+        if (isKey) encodePrimitive(value) else encodePrimitive(quoteValue(value))
     }
 
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
         val name = enumDescriptor.getElementName(index)
-        if (isKey) encodePrimitive(name)
-        else encodePrimitive(quoteValue(name))
+        if (isKey) encodePrimitive(name) else encodePrimitive(quoteValue(name))
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
@@ -92,7 +90,7 @@ internal class ToonMapEncoder(
                     config = config,
                     serializersModule = serializersModule,
                     indentLevel = indentLevel,
-                    key = key
+                    key = key,
                 )
             }
             StructureKind.CLASS,
@@ -103,7 +101,7 @@ internal class ToonMapEncoder(
                     config = config,
                     serializersModule = serializersModule,
                     indentLevel = indentLevel + 1,
-                    isRoot = false
+                    isRoot = false,
                 )
             }
             StructureKind.MAP -> {
@@ -113,7 +111,7 @@ internal class ToonMapEncoder(
                     config = config,
                     serializersModule = serializersModule,
                     indentLevel = indentLevel + 1,
-                    isRoot = false
+                    isRoot = false,
                 )
             }
             else -> this

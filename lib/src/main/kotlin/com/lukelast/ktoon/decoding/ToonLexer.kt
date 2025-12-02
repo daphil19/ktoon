@@ -157,12 +157,12 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
     private fun parseArrayHeader(keyPart: String): ArrayHeaderMatch? {
         val bracketStart = findUnquotedChar(keyPart, '[')
         if (bracketStart == -1) {
-             return null
+            return null
         }
 
         val bracketEnd = findUnquotedChar(keyPart, ']', bracketStart)
         if (bracketEnd == -1) {
-             return null
+            return null
         }
 
         val key = keyPart.substring(0, bracketStart).trim()
@@ -280,7 +280,8 @@ internal sealed class Token {
      * @property indent Indentation level in spaces
      * @property line Line number (1-based)
      */
-    data class TabularRow(val values: List<String>, val indent: Int, override val line: Int) : Token()
+    data class TabularRow(val values: List<String>, val indent: Int, override val line: Int) :
+        Token()
 
     /**
      * Blank line token.

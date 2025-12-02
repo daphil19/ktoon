@@ -4,7 +4,8 @@ import com.lukelast.ktoon.fixtures.runDecodeFixtureTest
 import org.junit.jupiter.api.Test
 
 /**
- * Tests from primitives.json fixture - Primitive value decoding: strings, numbers, booleans, null, unescaping.
+ * Tests from primitives.json fixture - Primitive value decoding: strings, numbers, booleans, null,
+ * unescaping.
  */
 class PrimitivesDecodeTest {
 

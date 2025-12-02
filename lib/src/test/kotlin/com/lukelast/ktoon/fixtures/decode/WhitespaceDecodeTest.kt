@@ -12,11 +12,9 @@ class WhitespaceDecodeTest {
 
     private val fixture = "whitespace"
 
-    @Serializable
-    data class TagsResult(val tags: List<String>)
+    @Serializable data class TagsResult(val tags: List<String>)
 
-    @Serializable
-    data class ItemsResult(val items: List<String>)
+    @Serializable data class ItemsResult(val items: List<String>)
 
     @Test
     fun `tolerates spaces around commas in inline arrays`() {
