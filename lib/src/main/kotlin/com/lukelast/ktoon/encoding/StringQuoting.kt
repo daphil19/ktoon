@@ -2,6 +2,7 @@ package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.util.isAlpha
+import com.lukelast.ktoon.util.isDigit
 
 /** Utility for quoting and unquoting strings according to TOON format rules. */
 internal object StringQuoting {
@@ -12,6 +13,26 @@ internal object StringQuoting {
         ARRAY_ELEMENT,
     }
 
+    // Lookup table for characters that ALWAYS require quoting (except delimiter which is dynamic)
+    // Indices correspond to ASCII values.
+    private val SPECIAL_CHARS = BooleanArray(128)
+
+    init {
+        // Control characters (0-31)
+        for (i in 0..31) {
+            SPECIAL_CHARS[i] = true
+        }
+        // Specific special characters
+        SPECIAL_CHARS['"'.code] = true
+        SPECIAL_CHARS['\\'.code] = true
+        SPECIAL_CHARS[':'.code] = true
+        SPECIAL_CHARS['['.code] = true
+        SPECIAL_CHARS[']'.code] = true
+        SPECIAL_CHARS['{'.code] = true
+        SPECIAL_CHARS['}'.code] = true
+        // Note: Delimiter is checked dynamically
+    }
+
     fun needsQuoting(
         str: String,
         context: QuotingContext = QuotingContext.OBJECT_VALUE,
@@ -19,97 +40,94 @@ internal object StringQuoting {
     ): Boolean {
         if (str.isEmpty()) return true
         val len = str.length
-        if (len == 4 && (str == "true" || str == "null")) {
-            return true
-        } else if (len == 5 && str == "false") {
-            return true
+
+        // Check first character
+        val first = str[0]
+        if (first == '-') return true // Starts with hyphen
+        if (first.code < 128 && SPECIAL_CHARS[first.code]) return true // Control or special
+
+        // Check last character (trailing whitespace)
+        // Leading whitespace is covered by control check (0-31 includes space? No, space is 32)
+        // Spec says: "It has leading or trailing whitespace."
+        if (first <= ' ') return true
+        val last = str[len - 1]
+        if (last <= ' ') return true
+
+        // Check for specific keywords
+        if (len == 4 && (str == "true" || str == "null")) return true
+        if (len == 5 && str == "false") return true
+
+        // Single pass loop
+        var isNumericLike = true
+        var hasInvalidKeyChar = false
+        val checkKey = (context == QuotingContext.OBJECT_KEY)
+
+        // Numeric state tracking
+        var seenDot = false
+        var seenExp = false
+        var seenDigit = false
+
+        for (i in 0 until len) {
+            val c = str[i]
+            val code = c.code
+
+            // 1. Check special chars and delimiter
+            if (code < 128) {
+                if (SPECIAL_CHARS[code]) return true
+            }
+            if (c == delimiter) {
+                if (
+                    context == QuotingContext.ARRAY_ELEMENT ||
+                        context == QuotingContext.OBJECT_VALUE
+                ) {
+                    return true
+                }
+            }
+
+            // 2. Check Key Validity (if needed)
+            if (checkKey && !hasInvalidKeyChar) {
+                // ^[A-Za-z_][A-Za-z0-9_.]*$
+                if (i == 0) {
+                    if (!c.isAlpha() && c != '_') hasInvalidKeyChar = true
+                } else {
+                    if (!c.isAlpha() && !c.isDigit() && c != '_' && c != '.')
+                        hasInvalidKeyChar = true
+                }
+            }
+
+            // 3. Update Numeric State
+            if (isNumericLike) {
+                if (c.isDigit()) {
+                    seenDigit = true
+                } else if (c == '.') {
+                    if (seenDot || seenExp) isNumericLike = false
+                    seenDot = true
+                } else if (c == 'e' || c == 'E') {
+                    if (seenExp || !seenDigit) isNumericLike = false
+                    seenExp = true
+                    seenDigit = false // Need digits after E
+                } else if (c == '+' || c == '-') {
+                    // Sign only allowed at start (handled) or after E
+                    if (!seenExp || (str[i - 1] != 'e' && str[i - 1] != 'E')) isNumericLike = false
+                } else {
+                    isNumericLike = false
+                }
+            }
         }
 
-        val first = str[0]
-        if (first == '-') return true
-        if (first <= ' ') return true // Starts with whitespace or control
+        if (checkKey && hasInvalidKeyChar) return true
 
-        val last = str[len - 1]
-        if (last <= ' ') return true // Ends with whitespace or control
-
-        if (isNumber(str)) return true
-        val contextIsArrayOrObject =
-            (context == QuotingContext.OBJECT_VALUE || context == QuotingContext.ARRAY_ELEMENT)
-
-        for (i in str.indices) {
-            val c = str[i]
-            if (c < ' ') return true // Control char
-            if (shouldQuoteChar(c)) return true
-            if (contextIsArrayOrObject && c == delimiter) {
+        // Final numeric check
+        // Must end with digit if it's a number?
+        // Spec: "Matches /^-?\d+(?:\.\d+)?(?:e[+-]?\d+)?$/i"
+        // This implies it must end with a digit.
+        if (isNumericLike) {
+            if (last.isDigit()) {
                 return true
             }
         }
 
-        if (context == QuotingContext.OBJECT_KEY) {
-            if (!isValidUnquotedKey(str)) return true
-        }
-
         return false
-    }
-
-    private fun shouldQuoteChar(c: Char): Boolean {
-        return c == '"' ||
-            c == '\\' ||
-            c == '\n' ||
-            c == '\r' ||
-            c == '\t' ||
-            c == ':' ||
-            c == '[' ||
-            c == ']' ||
-            c == '{' ||
-            c == '}'
-    }
-
-    private fun isNumber(str: String): Boolean {
-        if (str.isEmpty()) return false
-        var i = 0
-        val len = str.length
-        if (str[i] == '-') {
-            i++
-            if (i == len) return false
-        }
-
-        var hasDot = false
-        var hasExp = false
-        var hasDigit = false
-
-        while (i < len) {
-            val c = str[i]
-            if (c.isDigit()) {
-                hasDigit = true
-            } else if (c == '.') {
-                if (hasDot || hasExp) return false
-                hasDot = true
-            } else if (c == 'e' || c == 'E') {
-                if (hasExp || !hasDigit) return false
-                hasExp = true
-                if (i + 1 < len && (str[i + 1] == '+' || str[i + 1] == '-')) {
-                    i++
-                }
-                if (i + 1 == len) return false
-                hasDigit = false
-            } else {
-                return false
-            }
-            i++
-        }
-        return hasDigit
-    }
-
-    private fun isValidUnquotedKey(str: String): Boolean {
-        if (str.isEmpty()) return false
-        val first = str[0]
-        if (!first.isAlpha() && first != '_') return false
-        for (i in 1 until str.length) {
-            val c = str[i]
-            if (!c.isAlpha() && !c.isDigit() && c != '_' && c != '.') return false
-        }
-        return true
     }
 
     fun quote(

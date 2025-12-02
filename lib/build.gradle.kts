@@ -14,15 +14,17 @@ repositories { mavenCentral() }
 
 sourceSets {
     val main: SourceSet by getting
-    val bench: SourceSet by creating {
+    val benchmark: SourceSet by creating {
         compileClasspath += main.output
         runtimeClasspath += main.output
     }
 }
 
-kotlin { target { compilations.getByName("bench").associateWith(compilations.getByName("main")) } }
+kotlin {
+    target { compilations.getByName("benchmark").associateWith(compilations.getByName("main")) }
+}
 
-benchmark { targets { register("bench") } }
+benchmark { targets { register("benchmark") } }
 
 dependencies {
     api(libs.kotlin.serialization)
@@ -38,12 +40,12 @@ dependencies {
     testImplementation(libs.kotlinToon)
 
     // Benchmark dependencies
-    "benchImplementation"(libs.kotlinx.benchmark.runtime)
-    "benchImplementation"(libs.kotlin.serialization)
-    "benchImplementation"(libs.instancio.junit)
+    "benchmarkImplementation"(libs.kotlinx.benchmark.runtime)
+    "benchmarkImplementation"(libs.kotlin.serialization)
+    "benchmarkImplementation"(libs.instancio.junit)
     // Comparison libraries
-    "benchImplementation"(libs.jtoon)
-    "benchImplementation"(libs.kotlinToon)
+    "benchmarkImplementation"(libs.jtoon)
+    "benchmarkImplementation"(libs.kotlinToon)
 }
 
 tasks.test {
