@@ -2,6 +2,7 @@ package com.lukelast.ktoon.decoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonParsingException
+import com.lukelast.ktoon.encoding.StringQuoting
 
 /**
  * Lexer for tokenizing TOON format text.
@@ -34,8 +35,9 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
 
     /** Processes a single line of TOON input. */
     private fun processLine(line: String) {
-        // Skip empty lines
+        // Emit blank line token
         if (line.isBlank()) {
+            tokens.add(Token.BlankLine(currentLine))
             return
         }
 
@@ -44,27 +46,33 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         val trimmed = line.trimStart()
 
         // Check for dash (expanded array element marker)
-        if (trimmed.startsWith("- ")) {
+        if (trimmed.startsWith("- ") || trimmed == "-") {
             tokens.add(Token.Dash(indent, currentLine))
-            val value = trimmed.substring(2).trim()
+            val value = if (trimmed.length > 1) trimmed.substring(2).trim() else ""
             if (value.isNotEmpty()) {
-                tokens.add(Token.Value(value, currentLine))
+                // Process the content after the dash as if it were a line at deeper indentation
+                // The dash and space add 2 to the indentation
+                processLineContent(value, indent + 2)
             }
             return
         }
 
+        processLineContent(trimmed, indent)
+    }
+
+    private fun processLineContent(content: String, indent: Int) {
         // Check for array header or key-value pair
-        val colonIndex = findUnquotedColon(trimmed)
+        val colonIndex = findUnquotedChar(content, ':')
 
         if (colonIndex == -1) {
             // No colon - this is a continuation value or error
-            tokens.add(Token.Value(trimmed, currentLine))
+            tokens.add(Token.Value(content, currentLine))
             return
         }
 
         // Split at colon
-        val keyPart = trimmed.substring(0, colonIndex).trim()
-        val valuePart = trimmed.substring(colonIndex + 1).trim()
+        val keyPart = content.substring(0, colonIndex).trim()
+        val valuePart = content.substring(colonIndex + 1).trim()
 
         // Check if this is an array header
         val arrayMatch = parseArrayHeader(keyPart)
@@ -111,12 +119,13 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         return count
     }
 
-    /** Finds the first unquoted colon in a string. Returns -1 if no unquoted colon is found. */
-    private fun findUnquotedColon(str: String): Int {
+    /** Finds the first unquoted occurrence of a character. Returns -1 if not found. */
+    private fun findUnquotedChar(str: String, target: Char, startIndex: Int = 0): Int {
         var inQuotes = false
         var escapeNext = false
 
-        for ((index, char) in str.withIndex()) {
+        for (i in startIndex until str.length) {
+            val char = str[i]
             when {
                 escapeNext -> {
                     escapeNext = false
@@ -127,8 +136,8 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                 char == '"' -> {
                     inQuotes = !inQuotes
                 }
-                char == ':' && !inQuotes -> {
-                    return index
+                char == target && !inQuotes -> {
+                    return i
                 }
             }
         }
@@ -146,11 +155,15 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
      * - `key[length|]` - Pipe delimiter
      */
     private fun parseArrayHeader(keyPart: String): ArrayHeaderMatch? {
-        val bracketStart = keyPart.indexOf('[')
-        if (bracketStart == -1) return null
+        val bracketStart = findUnquotedChar(keyPart, '[')
+        if (bracketStart == -1) {
+             return null
+        }
 
-        val bracketEnd = keyPart.indexOf(']', bracketStart)
-        if (bracketEnd == -1) return null
+        val bracketEnd = findUnquotedChar(keyPart, ']', bracketStart)
+        if (bracketEnd == -1) {
+             return null
+        }
 
         val key = keyPart.substring(0, bracketStart).trim()
         val bracketContent = keyPart.substring(bracketStart + 1, bracketEnd)
@@ -173,28 +186,21 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         val lengthStr = bracketContent.trimEnd('\t', '|')
 
         // Parse length
-        val length =
-            try {
-                lengthStr.toInt()
-            } catch (e: NumberFormatException) {
-                throw KtoonParsingException.invalidArrayFormat(
-                    "Invalid array length: '$lengthStr'",
-                    currentLine,
-                )
-            }
+        val length = lengthStr.toIntOrNull() ?: 0
 
         // Check for tabular format fields
         val fields =
             if (bracketEnd + 1 < keyPart.length && keyPart[bracketEnd + 1] == '{') {
-                val fieldsEnd = keyPart.indexOf('}', bracketEnd + 2)
-                if (fieldsEnd == -1) {
+                val braceStart = bracketEnd + 1
+                val braceEnd = findUnquotedChar(keyPart, '}', braceStart)
+                if (braceEnd == -1) {
                     throw KtoonParsingException.invalidArrayFormat(
                         "Unterminated field list in tabular array header",
                         currentLine,
                     )
                 }
-                val fieldsStr = keyPart.substring(bracketEnd + 2, fieldsEnd)
-                fieldsStr.split(delimiter.char).map { it.trim() }
+                val fieldsContent = keyPart.substring(braceStart + 1, braceEnd)
+                StringQuoting.splitRespectingQuotes(fieldsContent, delimiter.char).map { it.trim() }
             } else {
                 null
             }
@@ -275,4 +281,11 @@ internal sealed class Token {
      * @property line Line number (1-based)
      */
     data class TabularRow(val values: List<String>, val indent: Int, override val line: Int) : Token()
+
+    /**
+     * Blank line token.
+     *
+     * @property line Line number (1-based)
+     */
+    data class BlankLine(override val line: Int) : Token()
 }

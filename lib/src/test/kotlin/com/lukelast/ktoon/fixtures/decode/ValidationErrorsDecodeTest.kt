@@ -5,10 +5,10 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
 /**
- * Tests from validation-errors.json fixture - Validation errors: length mismatches, invalid escapes, syntax errors, delimiter mismatches.
+ * Tests from validation-errors.json fixture - Validation errors: length mismatches, invalid
+ * escapes, syntax errors, delimiter mismatches.
  */
 class ValidationErrorsDecodeTest {
-
     private val fixture = "validation-errors"
 
     @Test
@@ -21,19 +21,16 @@ class ValidationErrorsDecodeTest {
         runDecodeFixtureTest<Map<String, List<Int>>>(fixture)
     }
 
-    @Serializable
-    data class TabularItem(val id: Int, val name: String)
+    @Serializable data class TabularItem(val id: Int, val name: String)
 
-    @Serializable
-    data class TabularResult(val items: List<TabularItem>)
+    @Serializable data class TabularResult(val items: List<TabularItem>)
 
     @Test
     fun `throws on tabular row value count mismatch with header field count`() {
         runDecodeFixtureTest<TabularResult>(fixture)
     }
 
-    @Serializable
-    data class IdOnly(val id: Int)
+    @Serializable data class IdOnly(val id: Int)
 
     @Test
     fun `throws on tabular row count mismatch with header length`() {
@@ -52,7 +49,9 @@ class ValidationErrorsDecodeTest {
 
     @Test
     fun `throws on missing colon in key-value context`() {
-        runDecodeFixtureTest<Map<String, String>>(fixture)
+        @Serializable data class User(val user: String)
+        @Serializable data class Root(val a: User)
+        runDecodeFixtureTest<Root>(fixture)
     }
 
     @Test

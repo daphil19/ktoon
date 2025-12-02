@@ -3,16 +3,16 @@ package com.lukelast.ktoon.data1
 import com.lukelast.ktoon.KeyFoldingMode.SAFE
 import com.lukelast.ktoon.Ktoon
 import com.lukelast.ktoon.KtoonConfiguration
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.isReadable
 import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 abstract class Runner {
     @Test
@@ -36,11 +36,17 @@ abstract class Runner {
         if (!toonPath.isReadable()) {
             execToonCli(jsonPath, toonPath)
         }
-        val expectedToonText = toonPath.readText()
+        val toonFileText = toonPath.readText()
 
-        val actualToonText = ktoon.encodeToString(data)
+        val dataToToonText = ktoon.encodeToString(data)
+        assertEquals(
+            toonFileText,
+            dataToToonText,
+            "ktoon encodeToString checked against the toon file",
+        )
 
-        assertEquals(expectedToonText, actualToonText)
+        val toonFileTextToData: T = ktoon.decodeFromString(toonFileText)
+        assertEquals(data, toonFileTextToData, "comparing original data object to ktoon decode")
     }
 
     fun execToonCli(json: Path, toon: Path) {

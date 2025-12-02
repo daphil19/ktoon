@@ -199,7 +199,14 @@ internal class ToonArrayEncoder(
                     if (i < elements.lastIndex) writer.writeDelimiter()
                 }
             }
-            ArrayFormatSelector.ArrayFormat.TABULAR -> writeTabularImpl(key, elements, indent)
+            ArrayFormatSelector.ArrayFormat.TABULAR -> {
+                if (key != null) {
+                    writeTabularImpl(key, elements, indent)
+                } else {
+                    writeArrayHeader(key, elements.size, delim)
+                    elements.forEach { writeElement(it, indent + 1) }
+                }
+            }
             ArrayFormatSelector.ArrayFormat.EXPANDED -> {
                 writeArrayHeader(key, elements.size, delim)
                 elements.forEach { writeElement(it, indent + 1) }

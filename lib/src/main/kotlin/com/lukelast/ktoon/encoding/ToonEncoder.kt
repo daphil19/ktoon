@@ -62,8 +62,7 @@ internal class ToonEncoder(
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder =
         when (descriptor.kind) {
             StructureKind.CLASS,
-            StructureKind.OBJECT,
-            StructureKind.MAP -> {
+            StructureKind.OBJECT -> {
                 val siblingKeys =
                     (0 until descriptor.elementsCount).map { descriptor.getElementName(it) }.toSet()
                 ToonObjectEncoder(
@@ -75,6 +74,14 @@ internal class ToonEncoder(
                     siblingKeys = siblingKeys,
                 )
             }
+            StructureKind.MAP ->
+                ToonMapEncoder(
+                    writer = writer,
+                    config = config,
+                    serializersModule = serializersModule,
+                    indentLevel = 0,
+                    isRoot = true,
+                )
             StructureKind.LIST ->
                 ToonArrayEncoder(
                     writer = writer,

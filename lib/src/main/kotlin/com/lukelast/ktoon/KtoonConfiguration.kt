@@ -79,6 +79,7 @@ class KtoonConfigurationBuilder {
     /** Enable [keyFolding] */
     fun keyFoldingSafe() {
         keyFolding = KeyFoldingMode.SAFE
+        pathExpansion = true
     }
 
     /**

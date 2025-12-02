@@ -130,8 +130,7 @@ internal class ToonObjectEncoder(
 
                 when (descriptor.kind) {
                     StructureKind.CLASS,
-                    StructureKind.OBJECT,
-                    StructureKind.MAP -> {
+                    StructureKind.OBJECT -> {
                         writeKey(key)
                         ToonObjectEncoder(
                             writer = writer,
@@ -141,6 +140,16 @@ internal class ToonObjectEncoder(
                             isRoot = false,
                             pendingKeys = emptyList(),
                             siblingKeys = newSiblingKeys,
+                        )
+                    }
+                    StructureKind.MAP -> {
+                        writeKey(key)
+                        ToonMapEncoder(
+                            writer = writer,
+                            config = config,
+                            serializersModule = serializersModule,
+                            indentLevel = newIndent + 1,
+                            isRoot = false,
                         )
                     }
                     StructureKind.LIST ->

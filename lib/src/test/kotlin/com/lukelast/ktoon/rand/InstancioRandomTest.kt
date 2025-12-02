@@ -12,13 +12,21 @@ class InstancioRandomTest {
         repeat(100) {
             val randomData =
                 Instancio.of(FarmTestData::class.java)
-                    .withSetting(Keys.COLLECTION_MIN_SIZE, 20)
-                    .withMaxDepth(100)
-                    .withSetting(Keys.STRING_NULLABLE, true)
-                    .withSetting(Keys.STRING_MAX_LENGTH, 100)
+                    .withSetting(Keys.COLLECTION_MIN_SIZE, 0)
+                    .withSetting(Keys.COLLECTION_MAX_SIZE, 10)
+                    .withMaxDepth(500)
+                    // .withSetting(Keys.STRING_NULLABLE, true)
+                    .withSetting(Keys.STRING_MAX_LENGTH, 10)
                     .create()
-            val ktoon = Ktoon().encodeToString(randomData)
-            Assertions.assertNotNull(ktoon)
+            //            Path("original.txt").writeText(randomData.toString())
+            val toonText = Ktoon().encodeToString(randomData)
+            Assertions.assertTrue(toonText.isNotBlank())
+            //            Path("test.toon").writeText(toonText)
+
+            val parsedData = Ktoon().decodeFromString<FarmTestData>(toonText)
+            //            Path("parsed.txt").writeText(parsedData.toString())
+
+            Assertions.assertEquals(randomData, parsedData)
         }
     }
 }

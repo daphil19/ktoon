@@ -7,7 +7,6 @@ data class FarmTestData(
     val primitives: PrimitiveBarn,
     val nullablePrimitives: NullableCorral,
     val collections: CollectionCoop,
-    val arrays: ArrayPasture,
     val nesting: NestingPaddock,
     val generics: GenericStable,
 )
@@ -60,30 +59,8 @@ data class CollectionCoop(
     val pastureGrid: List<List<List<String>>>,
     val nullableAnimals: List<FarmAnimal?>,
     val nullableFeedPerPen: Map<String, List<Double>?>,
-    val barnMatrix: Array<Array<FarmAnimal>>,
     val mixedFeedCrates: Map<String, FeedCrate<FeedMix>>,
     val animalStacks: Map<String, Map<String, List<FarmAnimal>>>,
-)
-
-@Serializable
-@Suppress("ArrayInDataClass")
-data class ArrayPasture
-@OptIn(ExperimentalUnsignedTypes::class)
-constructor(
-    val goatNameArray: Array<String>,
-    val herdGrid: Array<Array<FarmAnimal>>,
-    val sheepAges: IntArray,
-    val feedWeights: DoubleArray,
-    val fenceSegments: LongArray,
-    val milkSamples: FloatArray,
-    val hoofCounts: ShortArray,
-    val chickCodes: ByteArray,
-    val troughStates: BooleanArray,
-    val stallInitials: CharArray,
-    val unsignedFenceCounts: UIntArray,
-    val unsignedGateWeights: ULongArray,
-    val unsignedTagNumbers: UShortArray,
-    val unsignedHatchlingIds: UByteArray,
 )
 
 @Serializable

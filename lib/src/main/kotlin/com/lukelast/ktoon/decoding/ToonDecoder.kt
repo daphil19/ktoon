@@ -8,6 +8,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.AbstractDecoder
 import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.modules.SerializersModule
 
 /**
@@ -36,11 +37,18 @@ internal class ToonDecoder(
             rootValue = reader.readRoot()
         }
 
+        val value = rootValue!!
+
         // Create appropriate decoder based on root value type
-        return when (val value = rootValue!!) {
+        return when (value) {
             is ToonValue.Object -> {
-                ToonObjectDecoder(value, serializersModule, config)
-                    .decodeSerializableValue(deserializer)
+                if (deserializer.descriptor.kind == StructureKind.MAP) {
+                    ToonMapDecoder(value, serializersModule, config)
+                        .decodeSerializableValue(deserializer)
+                } else {
+                    ToonObjectDecoder(value, serializersModule, config)
+                        .decodeSerializableValue(deserializer)
+                }
             }
             is ToonValue.Array -> {
                 ToonArrayDecoder(value, serializersModule, config)
@@ -57,6 +65,13 @@ internal class ToonDecoder(
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
         throw KtoonDecodingException("decodeElementIndex not supported at root level")
     }
+    
+    internal fun getToonValue(): ToonValue {
+        if (rootValue == null) {
+            rootValue = reader.readRoot()
+        }
+        return rootValue!!
+    }
 }
 
 /** Decoder for primitive TOON values. */
@@ -66,6 +81,8 @@ internal class ToonPrimitiveDecoder(
     override val serializersModule: SerializersModule,
     private val config: KtoonConfiguration,
 ) : AbstractDecoder() {
+
+    internal fun getToonValue(): ToonValue = value
 
     override fun decodeNull(): Nothing? {
         return null
@@ -180,6 +197,11 @@ internal class ToonObjectDecoder(
     private val descriptor: SerialDescriptor? = null,
 ) : AbstractDecoder() {
 
+    internal fun getToonValue(): ToonValue {
+        val fieldName = getCurrentFieldName()
+        return value.properties[fieldName] ?: throw KtoonDecodingException.missingField(fieldName)
+    }
+
     private var currentIndex = 0
     private var currentFieldName: String? = null
 
@@ -234,6 +256,8 @@ internal class ToonObjectDecoder(
         return decode(decoder)
     }
 
+
+
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         // If currentFieldName is null, we're beginning the root structure itself
         if (currentFieldName == null) {
@@ -244,37 +268,13 @@ internal class ToonObjectDecoder(
         val fieldValue =
             value.properties[fieldName] ?: throw KtoonDecodingException.missingField(fieldName)
 
-        return when (descriptor.kind) {
-            StructureKind.CLASS,
-            StructureKind.OBJECT -> {
-                if (fieldValue !is ToonValue.Object) {
-                    throw KtoonDecodingException.typeMismatch(
-                        "Object",
-                        fieldValue::class.simpleName ?: "unknown",
-                    )
-                }
-                ToonObjectDecoder(fieldValue, serializersModule, config)
-            }
-            StructureKind.LIST -> {
-                if (fieldValue !is ToonValue.Array) {
-                    throw KtoonDecodingException.typeMismatch(
-                        "Array",
-                        fieldValue::class.simpleName ?: "unknown",
-                    )
-                }
-                ToonArrayDecoder(fieldValue, serializersModule, config)
-            }
-            StructureKind.MAP -> {
-                if (fieldValue !is ToonValue.Object) {
-                    throw KtoonDecodingException.typeMismatch(
-                        "Map",
-                        fieldValue::class.simpleName ?: "unknown",
-                    )
-                }
-                ToonObjectDecoder(fieldValue, serializersModule, config)
-            }
-            else -> this
-        }
+        return createDecoderForStructure(
+            descriptor,
+            fieldValue,
+            serializersModule,
+            config,
+            this
+        )
     }
 
     private fun getCurrentFieldName(): String {
@@ -295,6 +295,10 @@ internal class ToonArrayDecoder(
     override val serializersModule: SerializersModule,
     private val config: KtoonConfiguration,
 ) : AbstractDecoder() {
+
+    internal fun getToonValue(): ToonValue {
+        return getCurrentElement()
+    }
 
     private var currentIndex = 0
 
@@ -348,28 +352,13 @@ internal class ToonArrayDecoder(
 
         val element = getCurrentElement()
 
-        return when (descriptor.kind) {
-            StructureKind.CLASS,
-            StructureKind.OBJECT -> {
-                if (element !is ToonValue.Object) {
-                    throw KtoonDecodingException.typeMismatch(
-                        "Object",
-                        element::class.simpleName ?: "unknown",
-                    )
-                }
-                ToonObjectDecoder(element, serializersModule, config)
-            }
-            StructureKind.LIST -> {
-                if (element !is ToonValue.Array) {
-                    throw KtoonDecodingException.typeMismatch(
-                        "Array",
-                        element::class.simpleName ?: "unknown",
-                    )
-                }
-                ToonArrayDecoder(element, serializersModule, config)
-            }
-            else -> this
-        }
+        return createDecoderForStructure(
+            descriptor,
+            element,
+            serializersModule,
+            config,
+            this
+        )
     }
 
     private fun getCurrentElement(): ToonValue {
@@ -384,5 +373,158 @@ internal class ToonArrayDecoder(
     override fun decodeNotNullMark(): Boolean {
         val element = getCurrentElement()
         return element != ToonValue.Null
+    }
+}
+
+/** Decoder for TOON maps. */
+@OptIn(ExperimentalSerializationApi::class)
+internal class ToonMapDecoder(
+    private val value: ToonValue.Object,
+    override val serializersModule: SerializersModule,
+    private val config: KtoonConfiguration,
+) : AbstractDecoder() {
+
+    internal fun getToonValue(): ToonValue {
+        val index = position - 1
+        val entryIndex = index / 2
+        val isKey = index % 2 == 0
+        val key = keys[entryIndex]
+
+        if (isKey) {
+            return ToonValue.String(key)
+        } else {
+            return value.properties[key]!!
+        }
+    }
+
+    private val keys = value.properties.keys.toList()
+    private var position = 0
+
+    override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
+        if (position < keys.size * 2) {
+            return position++
+        }
+        return CompositeDecoder.DECODE_DONE
+    }
+
+    override fun decodeCollectionSize(descriptor: SerialDescriptor): Int {
+        return value.properties.size
+    }
+
+    override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
+        if (position == 0) {
+            return this
+        }
+
+        val index = position - 1
+        val entryIndex = index / 2
+        val isKey = index % 2 == 0
+        val key = keys[entryIndex]
+
+        if (isKey) {
+            return ToonPrimitiveDecoder(ToonValue.String(key), serializersModule, config)
+        }
+
+        val element = value.properties[key]!!
+        return createDecoderForStructure(
+            descriptor,
+            element,
+            serializersModule,
+            config,
+            ToonPrimitiveDecoder(element, serializersModule, config)
+        )
+    }
+
+    override fun decodeNotNullMark(): Boolean {
+        val index = position - 1
+        val entryIndex = index / 2
+        val isKey = index % 2 == 0
+
+        if (isKey) return true
+
+        val key = keys[entryIndex]
+        val element = value.properties[key]
+        return element != null && element != ToonValue.Null
+    }
+
+    override fun decodeNull(): Nothing? = null
+
+    override fun decodeBoolean(): Boolean = decodeCurrent { it.decodeBoolean() }
+
+    override fun decodeByte(): Byte = decodeCurrent { it.decodeByte() }
+
+    override fun decodeShort(): Short = decodeCurrent { it.decodeShort() }
+
+    override fun decodeInt(): Int = decodeCurrent { it.decodeInt() }
+
+    override fun decodeLong(): Long = decodeCurrent { it.decodeLong() }
+
+    override fun decodeFloat(): Float = decodeCurrent { it.decodeFloat() }
+
+    override fun decodeDouble(): Double = decodeCurrent { it.decodeDouble() }
+
+    override fun decodeChar(): Char = decodeCurrent { it.decodeChar() }
+
+    override fun decodeString(): String = decodeCurrent { it.decodeString() }
+
+    override fun decodeEnum(enumDescriptor: SerialDescriptor): Int {
+        return decodeCurrent { it.decodeEnum(enumDescriptor) }
+    }
+
+    private fun <T> decodeCurrent(decode: (Decoder) -> T): T {
+        val index = position - 1
+        val entryIndex = index / 2
+        val isKey = index % 2 == 0
+        val key = keys[entryIndex]
+
+        val decoder = if (isKey) {
+            ToonPrimitiveDecoder(ToonValue.String(key), serializersModule, config)
+        } else {
+            val element = value.properties[key]!!
+            ToonPrimitiveDecoder(element, serializersModule, config)
+        }
+        return decode(decoder)
+    }
+}
+
+internal fun createDecoderForStructure(
+    descriptor: SerialDescriptor,
+    value: ToonValue,
+    serializersModule: SerializersModule,
+    config: KtoonConfiguration,
+    fallback: CompositeDecoder
+): CompositeDecoder {
+    return when (descriptor.kind) {
+        StructureKind.CLASS,
+        StructureKind.OBJECT -> {
+            val target = if (value is ToonValue.Null) ToonValue.Object(emptyMap()) else value
+            if (target !is ToonValue.Object) {
+                throw KtoonDecodingException.typeMismatch(
+                    "Object",
+                    target::class.simpleName ?: "unknown",
+                )
+            }
+            ToonObjectDecoder(target, serializersModule, config)
+        }
+        StructureKind.LIST -> {
+            if (value !is ToonValue.Array) {
+                throw KtoonDecodingException.typeMismatch(
+                    "Array",
+                    value::class.simpleName ?: "unknown",
+                )
+            }
+            ToonArrayDecoder(value, serializersModule, config)
+        }
+        StructureKind.MAP -> {
+            val target = if (value is ToonValue.Null) ToonValue.Object(emptyMap()) else value
+            if (target !is ToonValue.Object) {
+                throw KtoonDecodingException.typeMismatch(
+                    "Map",
+                    target::class.simpleName ?: "unknown",
+                )
+            }
+            ToonMapDecoder(target, serializersModule, config)
+        }
+        else -> fallback
     }
 }

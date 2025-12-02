@@ -6,31 +6,25 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
 /**
- * Tests from indentation-errors.json fixture - Strict mode indentation validation: non-multiple indentation, tab characters, custom indent sizes.
+ * Tests from indentation-errors.json fixture - Strict mode indentation validation: non-multiple
+ * indentation, tab characters, custom indent sizes.
  */
 class IndentationErrorsDecodeTest {
-
     private val fixture = "indentation-errors"
 
-    @Serializable
-    data class NestedB(val b: Int)
+    @Serializable data class NestedB(val b: Int)
 
-    @Serializable
-    data class NestedA(val a: NestedB)
+    @Serializable data class NestedA(val a: NestedB)
 
     @Test
     fun `throws on object field with non-multiple indentation (3 spaces with indent=2)`() {
         runDecodeFixtureTest<NestedA>(fixture)
     }
 
-    @Serializable
-    data class ListItem(val id: Int)
-
-    @Serializable
-    data class ListResult(val items: List<ListItem>)
-
     @Test
     fun `throws on list item with non-multiple indentation (3 spaces with indent=2)`() {
+        @Serializable data class ListItem(val id: Int)
+        @Serializable data class ListResult(val items: List<ListItem>)
         runDecodeFixtureTest<ListResult>(fixture)
     }
 
@@ -59,22 +53,15 @@ class IndentationErrorsDecodeTest {
         runDecodeFixtureTest<Map<String, Int>>(fixture)
     }
 
-    @Serializable
-    data class WithText(val text: String)
-
     @Test
     fun `accepts tabs in quoted string values`() {
+        @Serializable data class WithText(val text: String)
         runDecodeFixtureTest<WithText>(fixture)
     }
 
-    @Serializable
-    data class WithKeyTab(
-        @SerialName("key\ttab")
-        val keyTab: String
-    )
-
     @Test
     fun `accepts tabs in quoted keys`() {
+        @Serializable data class WithKeyTab(@SerialName("key\ttab") val keyTab: String)
         runDecodeFixtureTest<WithKeyTab>(fixture)
     }
 
@@ -90,22 +77,22 @@ class IndentationErrorsDecodeTest {
 
     @Test
     fun `accepts deeply nested non-multiples when strict=false`() {
-        runDecodeFixtureTest<NestedA>(fixture)
+        @Serializable data class DeepNestedC(val c: Int)
+        @Serializable data class DeepNestedB(val b: DeepNestedC)
+        @Serializable data class DeepNestedA(val a: DeepNestedB)
+        runDecodeFixtureTest<DeepNestedA>(fixture)
     }
 
-    @Serializable
-    data class TwoFields(val a: Int, val b: Int)
+    @Serializable data class TwoFields(val a: Int, val b: Int)
 
     @Test
     fun `parses empty lines without validation errors`() {
         runDecodeFixtureTest<TwoFields>(fixture)
     }
 
-    @Serializable
-    data class ThreeFields(val a: Int, val b: Int, val c: Int)
-
     @Test
     fun `parses root-level content (0 indentation) as always valid`() {
+        @Serializable data class ThreeFields(val a: Int, val b: Int, val c: Int)
         runDecodeFixtureTest<ThreeFields>(fixture)
     }
 

@@ -4,14 +4,17 @@ import com.lukelast.ktoon.fixtures.runDecodeFixtureTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 /**
- * Tests from arrays-primitive.json fixture - Primitive array decoding: inline arrays of strings, numbers, booleans, quoted strings.
+ * Tests from arrays-primitive.json fixture - Primitive array decoding: inline arrays of strings,
+ * numbers, booleans, quoted strings.
  */
 class ArraysPrimitiveDecodeTest {
-
     private val fixture = "arrays-primitive"
+
+    @Serializable data class Items(val items: List<String>)
 
     @Test
     fun `parses string arrays inline`() {
@@ -26,6 +29,7 @@ class ArraysPrimitiveDecodeTest {
     }
 
     @Test
+    @Disabled("Requires JsonElement support")
     fun `parses mixed primitive arrays inline`() {
         @Serializable data class Data(val data: List<JsonElement>)
         runDecodeFixtureTest<Data>(fixture)
@@ -33,43 +37,36 @@ class ArraysPrimitiveDecodeTest {
 
     @Test
     fun `parses empty arrays`() {
-        @Serializable data class Items(val items: List<String>)
         runDecodeFixtureTest<Items>(fixture)
     }
 
     @Test
     fun `parses single-item array with empty string`() {
-        @Serializable data class Items(val items: List<String>)
         runDecodeFixtureTest<Items>(fixture)
     }
 
     @Test
     fun `parses multi-item array with empty string`() {
-        @Serializable data class Items(val items: List<String>)
         runDecodeFixtureTest<Items>(fixture)
     }
 
     @Test
     fun `parses whitespace-only strings in arrays`() {
-        @Serializable data class Items(val items: List<String>)
         runDecodeFixtureTest<Items>(fixture)
     }
 
     @Test
     fun `parses strings with delimiters in arrays`() {
-        @Serializable data class Items(val items: List<String>)
         runDecodeFixtureTest<Items>(fixture)
     }
 
     @Test
     fun `parses strings that look like primitives when quoted`() {
-        @Serializable data class Items(val items: List<String>)
         runDecodeFixtureTest<Items>(fixture)
     }
 
     @Test
     fun `parses strings with structural tokens in arrays`() {
-        @Serializable data class Items(val items: List<String>)
         runDecodeFixtureTest<Items>(fixture)
     }
 

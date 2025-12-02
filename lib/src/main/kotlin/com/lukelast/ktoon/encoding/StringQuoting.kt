@@ -184,4 +184,30 @@ internal object StringQuoting {
         }
         return sb.toString()
     }
+    fun splitRespectingQuotes(content: String, delimiter: Char): List<String> {
+        val result = mutableListOf<String>()
+        var current = StringBuilder()
+        var inQuotes = false
+        var escapeNext = false
+
+        for (char in content) {
+            if (escapeNext) {
+                current.append(char)
+                escapeNext = false
+            } else if (char == '\\') {
+                current.append(char)
+                escapeNext = true
+            } else if (char == '"') {
+                inQuotes = !inQuotes
+                current.append(char)
+            } else if (char == delimiter && !inQuotes) {
+                result.add(current.toString())
+                current = StringBuilder()
+            } else {
+                current.append(char)
+            }
+        }
+        result.add(current.toString())
+        return result
+    }
 }

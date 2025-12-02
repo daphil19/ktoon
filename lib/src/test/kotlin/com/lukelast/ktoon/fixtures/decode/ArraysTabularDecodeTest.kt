@@ -6,40 +6,32 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
 /**
- * Tests from arrays-tabular.json fixture - Tabular array decoding: parsing arrays of uniform objects with headers.
+ * Tests from arrays-tabular.json fixture - Tabular array decoding: parsing arrays of uniform
+ * objects with headers.
  */
 class ArraysTabularDecodeTest {
 
     private val fixture = "arrays-tabular"
 
-    @Serializable
-    data class TabularItem(val sku: String, val qty: Int, val price: Double)
+    @Serializable data class TabularItem(val sku: String, val qty: Int, val price: Double)
 
-    @Serializable
-    data class IdValue(val id: Int, val value: String?)
+    @Serializable data class IdValue(val id: Int, val value: String?)
 
-    @Serializable
-    data class IdNote(val id: Int, val note: String)
+    @Serializable data class IdNote(val id: Int, val note: String)
 
     @Serializable
     data class OrderKey(
-        @SerialName("order:id")
-        val orderId: Int,
-        @SerialName("full name")
-        val fullName: String
+        @SerialName("order:id") val orderId: Int,
+        @SerialName("full name") val fullName: String,
     )
 
-    @Serializable
-    data class TabularResult(val items: List<TabularItem>)
+    @Serializable data class TabularResult(val items: List<TabularItem>)
 
-    @Serializable
-    data class IdValueResult(val items: List<IdValue>)
+    @Serializable data class IdValueResult(val items: List<IdValue>)
 
-    @Serializable
-    data class IdNoteResult(val items: List<IdNote>)
+    @Serializable data class IdNoteResult(val items: List<IdNote>)
 
-    @Serializable
-    data class OrderKeyResult(val items: List<OrderKey>)
+    @Serializable data class OrderKeyResult(val items: List<OrderKey>)
 
     @Test
     fun `parses tabular arrays of uniform objects`() {
@@ -61,22 +53,17 @@ class ArraysTabularDecodeTest {
         runDecodeFixtureTest<OrderKeyResult>(fixture)
     }
 
-    @Serializable
-    data class CustomItem(val id: Int, val name: String)
-
-    @Serializable
-    data class CustomItemResult(val `x-items`: List<CustomItem>)
+    @Serializable data class CustomItem(val id: Int, val name: String)
 
     @Test
     fun `parses quoted key with tabular array format`() {
+        @Serializable data class CustomItemResult(val `x-items`: List<CustomItem>)
         runDecodeFixtureTest<CustomItemResult>(fixture)
     }
 
-    @Serializable
-    data class CountResult(val items: List<TabularItem>, val count: Int)
-
     @Test
     fun `treats unquoted colon as terminator for tabular rows and start of key-value pair`() {
+        @Serializable data class CountResult(val items: List<CustomItem>, val count: Int)
         runDecodeFixtureTest<CountResult>(fixture)
     }
 }
