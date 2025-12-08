@@ -43,49 +43,28 @@ internal class ToonArrayEncoder(
     private fun quoteKey(value: String) =
         StringQuoting.quote(value, StringQuoting.QuotingContext.OBJECT_KEY, config.delimiter.char)
 
-    override fun encodeNull() {
-        addPrimitive("null")
-    }
+    override fun encodeNull() = addPrimitive("null")
 
-    override fun encodeBoolean(value: Boolean) {
-        addPrimitive(if (value) "true" else "false")
-    }
+    override fun encodeBoolean(value: Boolean) = addPrimitive(if (value) "true" else "false")
 
-    override fun encodeByte(value: Byte) {
-        addPrimitive(NumberNormalizer.normalize(value))
-    }
+    override fun encodeByte(value: Byte) = addPrimitive(NumberNormalizer.normalize(value))
 
-    override fun encodeShort(value: Short) {
-        addPrimitive(NumberNormalizer.normalize(value))
-    }
+    override fun encodeShort(value: Short) = addPrimitive(NumberNormalizer.normalize(value))
 
-    override fun encodeInt(value: Int) {
-        addPrimitive(NumberNormalizer.normalize(value))
-    }
+    override fun encodeInt(value: Int) = addPrimitive(NumberNormalizer.normalize(value))
 
-    override fun encodeLong(value: Long) {
-        addPrimitive(NumberNormalizer.normalize(value))
-    }
+    override fun encodeLong(value: Long) = addPrimitive(NumberNormalizer.normalize(value))
 
-    override fun encodeFloat(value: Float) {
-        addPrimitive(NumberNormalizer.normalize(value))
-    }
+    override fun encodeFloat(value: Float) = addPrimitive(NumberNormalizer.normalize(value))
 
-    override fun encodeDouble(value: Double) {
-        addPrimitive(NumberNormalizer.normalize(value))
-    }
+    override fun encodeDouble(value: Double) = addPrimitive(NumberNormalizer.normalize(value))
 
-    override fun encodeChar(value: Char) {
-        addPrimitive(quote(value.toString()))
-    }
+    override fun encodeChar(value: Char) = addPrimitive(quote(value.toString()))
 
-    override fun encodeString(value: String) {
-        addPrimitive(quote(value))
-    }
+    override fun encodeString(value: String) = addPrimitive(quote(value))
 
-    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
+    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) =
         addPrimitive(quote(enumDescriptor.getElementName(index)))
-    }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
         if (elementDescriptor == null) elementDescriptor = descriptor

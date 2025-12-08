@@ -1,7 +1,10 @@
 # ktoon
 [![](https://jitpack.io/v/lukelast/ktoon.svg)](https://jitpack.io/#lukelast/ktoon)
 [![.github/workflows/gradle.yml](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml/badge.svg)](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml)
-[![SPEC v3.0.1](https://img.shields.io/badge/spec-v3.0.1-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md)
+[![SPEC v3.0.1](https://img.shields.io/badge/ToonSpec-v3.0.1-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.2.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
+![Kotlin](https://img.shields.io/badge/Java-17+-yellow?logo=java)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Kotlin serializer for TOON (Token-Oriented Object Notation).
 
@@ -12,13 +15,13 @@ To learn about the TOON format and why you should use it read the official websi
 
 ## Features
 
-- **Full TOON 3.0.1 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays, key folding, and delimeters.
+- **Full TOON 3.0.1 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays, key folding, and delimeters. 400+ tests.
 - **Fully Featured**
     - Encode Kotlin data classes to TOON
     - Encode JSON to TOON
     - Decode TOON to Kotlin data classes
 - **Minimal Dependencies** - Only depends on kotlinx.serialization, no additional runtime dependencies.
-- **High Performance** - CharArray-based encoding optimized for minimal allocations and fast string operations, inspired by kotlinx.serialization internals.
+- **High Performance** - CharArray-based encoding optimized for minimal allocations and fast string operations.
 - **Flexible Configuration** - Configurable delimiters, indentation, and key folding.
 
 ## Add to your project (JitPack)
