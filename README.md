@@ -16,6 +16,8 @@ To learn about the TOON format and why you should use it read the official websi
 ## Features
 
 - **Full TOON 3.0.1 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays, key folding, and delimeters. 400+ tests.
+- **Kotlin Multiplatform** - Supports JVM and JavaScript targets. Others can be added on request.
+- **Maven Central** - Published to Maven Central for easy dependency management with Gradle and Maven.
 - **Fully Featured**
     - Encode Kotlin data classes to TOON
     - Encode JSON to TOON
@@ -34,6 +36,22 @@ dependencies {
 }
 ```
 
+Using Gradle Version Catalog:
+```toml
+# gradle/libs.versions.toml
+[versions]
+ktoon = "VERSION"
+
+[libraries]
+ktoon = { module = "com.lukelast.ktoon:ktoon", version.ref = "ktoon" }
+```
+```kotlin
+// build.gradle.kts
+dependencies {
+    implementation(libs.ktoon)
+}
+```
+
 For multiplatform projects:
 ```kotlin
 // build.gradle.kts
@@ -44,6 +62,16 @@ kotlin {
         }
     }
 }
+```
+
+Using Maven:
+```xml
+<!-- pom.xml -->
+<dependency>
+    <groupId>com.lukelast.ktoon</groupId>
+    <artifactId>ktoon-jvm</artifactId>
+    <version>VERSION</version>
+</dependency>
 ```
 
 ## Basic usage
