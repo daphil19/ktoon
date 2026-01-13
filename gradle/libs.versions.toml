@@ -36,4 +36,4 @@ kotlinx-benchmark-base = { id = "org.jetbrains.kotlinx.benchmark" }
 # Maven Central publishing
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
 
-android-library = { id = "com.android.library", version = "8.12.3" }
+android-library = { id = "com.android.library", version = "8.13.2" }
